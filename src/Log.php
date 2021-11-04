@@ -2,6 +2,30 @@
 namespace Terrazza\Component\Logger;
 
 class Log implements LogInterface {
+    public const LOG                                = 50;
+    public const DEBUG                              = 100;
+    public const INFO                               = 200;
+    public const NOTICE                             = 250;
+    public const WARNING                            = 300;
+    public const ERROR                              = 400;
+    public const CRITICAL                           = 500;
+    public const ALERT                              = 550;
+    public const EMERGENCY                          = 600;
+    public const EXCEPTION                          = 650;
+
+    public static array $levels = [
+        self::LOG                                   => 'LOG',
+        self::DEBUG                                 => 'DEBUG',
+        self::INFO                                  => 'INFO',
+        self::NOTICE                                => 'NOTICE',
+        self::WARNING                               => 'WARNING',
+        self::ERROR                                 => 'ERROR',
+        self::CRITICAL                              => 'CRITICAL',
+        self::ALERT                                 => 'ALERT',
+        self::EMERGENCY                             => 'EMERGENCY',
+        self::EXCEPTION                             => 'EXCEPTION',
+    ];
+
     private string $loggerName;
     private ?string $method                         = null;
     /**
@@ -54,11 +78,10 @@ class Log implements LogInterface {
 
     /**
      * @param int $logLevel
-     * @param string $logLevelName
      * @param $message
      * @param array $context
      */
-    private function addMessage(int $logLevel, string $logLevelName, $message, array $context=[]) : void {
+    private function addMessage(int $logLevel, $message, array $context=[]) : void {
         //
         if ($this->ignoreLogLevelHandler($logLevel)) return;
         //
@@ -66,7 +89,7 @@ class Log implements LogInterface {
         $logRecord                                  = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
-            $logLevelName,
+            self::$levels[$logLevel],
             $message,
             $context,
             $this->initContext);
@@ -83,38 +106,38 @@ class Log implements LogInterface {
     }
 
     public function emergency($message, array $context = array()) {
-        $this->addMessage(LOG_EMERG, "emergency", $message, $context);
+        $this->addMessage(self::EMERGENCY, $message, $context);
     }
 
     public function alert($message, array $context = array()){
-        $this->addMessage(LOG_ALERT, "alert", $message, $context);
+        $this->addMessage(self::ALERT, $message, $context);
     }
 
     public function critical($message, array $context = array()) {
-        $this->addMessage(LOG_CRIT, "critical", $message, $context);
+        $this->addMessage(self::CRITICAL, $message, $context);
     }
 
     public function error($message, array $context = array()) {
-        $this->addMessage(LOG_ERR, "error", $message, $context);
+        $this->addMessage(self::ERROR,$message, $context);
     }
 
     public function warning($message, array $context = array()) {
-        $this->addMessage(LOG_WARNING, "warning", $message, $context);
+        $this->addMessage(self::WARNING, $message, $context);
     }
 
     public function notice($message, array $context = array()) {
-        $this->addMessage(LOG_NOTICE, "notice", $message, $context);
+        $this->addMessage(self::NOTICE, $message, $context);
     }
 
     public function info($message, array $context = array()) {
-        $this->addMessage(LOG_INFO, "info", $message, $context);
+        $this->addMessage(self::INFO, $message, $context);
     }
 
     public function debug($message, array $context = array()) {
-        $this->addMessage(LOG_DEBUG, "debug", $message, $context);
+        $this->addMessage(self::DEBUG, $message, $context);
     }
 
     public function log($level, $message, array $context = array()) {
-        $this->addMessage(LOG_NEWS, "log", $message, $context);
+        $this->addMessage(self::LOG, $message, $context);
     }
 }

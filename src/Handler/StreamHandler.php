@@ -19,7 +19,7 @@ class StreamHandler implements LogHandlerInterface {
     }
 
     public function isHandling(LogRecord $logRecord): bool {
-        return $logRecord->getLogLevel() >= $this->logLevel;
+        return $logRecord->getLogLevel() <= $this->logLevel;
     }
 
     public function hasLogPatterns(): bool {
