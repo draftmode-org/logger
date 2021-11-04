@@ -6,8 +6,8 @@ use Terrazza\Component\Logger\LogRecord;
 
 class LineFormatter implements LoggerFormatterInterface {
     private string $lineBreak;
-    public function __construct(string $lineBreak) {
-        $this->lineBreak                            = $lineBreak ?? (php_sapi_name() == "cli" ? PHP_EOL : "<br/>");
+    public function __construct() {
+        $this->lineBreak                            = php_sapi_name() == "cli" ? PHP_EOL : "<br/>";
     }
 
     /**
@@ -16,27 +16,25 @@ class LineFormatter implements LoggerFormatterInterface {
      */
     public function format(LogRecord $logRecord) {
         $msg                                        = [];
-        $context                                    = $logRecord->getContext() ?? [];
-        if (array_key_exists("method", $context)) {
-            $msg[]                                  = $context["method"]."()";
-            unset($context["method"]);
+        $msg[]                                      = "[".$logRecord->getLogDate()->format("Y-m-d H:i:s.u")."]";
+        $msg[]                                      = "[".$logRecord->getLoggerName()."]";
+        $msg[]                                      = "[".$logRecord->getLogLevelName()."]";
+        if ($method = $logRecord->shiftContext("method")) {
+            $msg[]                                  = "$method()";
         }
-        $msg[]                                      = $logRecord->getLogLevel();
-        if (array_key_exists("line", $context)) {
-            $msg[]                                  = "[line: ".$context["line"]."]";
-            unset($context["line"]);
+        if ($line = $logRecord->shiftContext("line")) {
+            $msg[]                                  = "[line: $line]";
         }
         if (strlen($logRecord->getLogMessage())) {
             $msg[]                                  = $logRecord->getLogMessage();
         }
         $line                                       = print_r(join(" ", $msg).$this->lineBreak, true);
-        if ($context && array_key_exists("arguments", $context)) {
-            $arguments                              = $context["arguments"];
+        if ($arguments = $logRecord->shiftContext("arguments")) {
             if ($line = $this->formatObject($arguments)) {
                 $line                               .= $this->lineBreak . print_r($arguments, true) . $this->lineBreak;
             }
-            unset($context["arguments"]);
         }
+        $context                                    = $logRecord->getContext();
         if ($context && count($context)) {
             if ($line = $this->formatObject($arguments)) {
                 $line                               .= $this->lineBreak . print_r($context, true) . $this->lineBreak;
