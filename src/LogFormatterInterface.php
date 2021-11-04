@@ -2,7 +2,7 @@
 
 namespace Terrazza\Component\Logger;
 
-interface LoggerFormatterInterface {
+interface LogFormatterInterface {
     /**
      * @param LogRecord $logRecord
      * @return mixed

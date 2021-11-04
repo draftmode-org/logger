@@ -1,41 +1,41 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-class Logger implements LoggerInterface {
+class Log implements LogInterface {
     private string $loggerName;
     private ?string $method                         = null;
     /**
-     * @var array|LoggerHandlerInterface[]
+     * @var array|LogHandlerInterface[]
      */
     private array $handlers;
     private ?array $initContext                     = null;
     private array $ignoreLogLevels                  = [];
     private array $ignoreLogLevelHandlers           = [];
 
-    public function __construct(string $loggerName, LoggerHandlerInterface ...$handler) {
+    public function __construct(string $loggerName, LogHandlerInterface ...$handler) {
         $this->loggerName                           = $loggerName;
         $this->handlers                             = $handler ?? [];
     }
 
-    public function withHandler(LoggerHandlerInterface $handler) : LoggerInterface {
+    public function withHandler(LogHandlerInterface $handler) : LogInterface {
         $logger                                     = clone $this;
         $logger->handlers[]                         = $handler;
         return $logger;
     }
 
-    public function withMethod(string $method) : LoggerInterface {
+    public function withMethod(string $method) : LogInterface {
         $logger                                     = clone $this;
         $logger->method                             = $method;
         return $logger;
     }
 
-    public function withInitContext(array $context) : LoggerInterface {
+    public function withInitContext(array $context) : LogInterface {
         $logger                                     = clone $this;
         $logger->initContext                        = $context;
         return $logger;
     }
 
-    private function pushIgnoreLogLevelHandler(int $logLevel, LoggerHandlerInterface $handler) : void {
+    private function pushIgnoreLogLevelHandler(int $logLevel, LogHandlerInterface $handler) : void {
         if (!array_key_exists($logLevel, $this->ignoreLogLevelHandlers)) {
             $this->ignoreLogLevelHandlers[$logLevel] = [];
         }

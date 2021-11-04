@@ -1,17 +1,17 @@
 <?php
 namespace Terrazza\Component\Logger\Handler;
 
-use Terrazza\Component\Logger\LoggerFormatterInterface;
-use Terrazza\Component\Logger\LoggerHandlerInterface;
+use Terrazza\Component\Logger\LogFormatterInterface;
+use Terrazza\Component\Logger\LogHandlerInterface;
 use Terrazza\Component\Logger\LogRecord;
 
-class StreamHandler implements LoggerHandlerInterface {
+class StreamHandler implements LogHandlerInterface {
     private int $logLevel;
-    private LoggerFormatterInterface $formatter;
+    private LogFormatterInterface $formatter;
     private string $stream;
-    public function __construct(int $logLevel,
-                                LoggerFormatterInterface $formatter,
-                                string $stream
+    public function __construct(int                   $logLevel,
+                                LogFormatterInterface $formatter,
+                                string                $stream
     ) {
         $this->logLevel                             = $logLevel;
         $this->formatter                            = $formatter;

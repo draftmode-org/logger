@@ -2,7 +2,7 @@
 namespace Terrazza\Component\Logger;
 use Terrazza\Component\Logger\Handler\StreamHandlerWriteException;
 
-interface LoggerHandlerInterface {
+interface LogHandlerInterface {
     public function isHandling(LogRecord $logRecord) : bool;
     public function hasLogPatterns() : bool;
     /**

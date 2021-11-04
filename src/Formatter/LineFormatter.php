@@ -1,10 +1,10 @@
 <?php
 namespace Terrazza\Component\Logger\Formatter;
 
-use Terrazza\Component\Logger\LoggerFormatterInterface;
+use Terrazza\Component\Logger\LogFormatterInterface;
 use Terrazza\Component\Logger\LogRecord;
 
-class LineFormatter implements LoggerFormatterInterface {
+class LineFormatter implements LogFormatterInterface {
     private string $lineBreak;
     public function __construct() {
         $this->lineBreak                            = php_sapi_name() == "cli" ? PHP_EOL : "<br/>";
