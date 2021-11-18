@@ -30,14 +30,14 @@ class LineFormatter implements LogFormatterInterface {
         }
         $line                                       = print_r(join(" ", $msg).$this->lineBreak, true);
         if ($arguments = $logRecord->shiftContext("arguments")) {
-            if ($line = $this->formatObject($arguments)) {
-                $line                               .= $this->lineBreak . print_r($arguments, true) . $this->lineBreak;
+            if ($next = $this->formatObject($arguments)) {
+                $line                               .= $this->lineBreak . print_r($next, true) . $this->lineBreak;
             }
         }
         $context                                    = $logRecord->getContext();
         if ($context && count($context)) {
-            if ($line = $this->formatObject($arguments)) {
-                $line                               .= $this->lineBreak . print_r($context, true) . $this->lineBreak;
+            if ($next = $this->formatObject($arguments)) {
+                $line                               .= $this->lineBreak . print_r($next, true) . $this->lineBreak;
             }
         }
         return $line;
