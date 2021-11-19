@@ -80,12 +80,14 @@ class Log implements LogInterface {
      * @param int $logLevel
      * @param $message
      * @param array $context
+     * @param int|null $line
      */
-    private function addMessage(int $logLevel, $message, array $context=[]) : void {
+    private function addMessage(int $logLevel, $message, array $context=[], int $line=null) : void {
         //
         if ($this->ignoreLogLevelHandler($logLevel)) return;
         //
         $context["method"]                          = $this->method;
+        $context["line"]                            = $line;
         $logRecord                                  = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
@@ -105,39 +107,39 @@ class Log implements LogInterface {
         }
     }
 
-    public function emergency($message, array $context = array()) {
+    public function emergency($message, array $context = array(), int $line=null) : void {
         $this->addMessage(self::EMERGENCY, $message, $context);
     }
 
-    public function alert($message, array $context = array()){
+    public function alert($message, array $context = array(), int $line=null) : void {
         $this->addMessage(self::ALERT, $message, $context);
     }
 
-    public function critical($message, array $context = array()) {
+    public function critical($message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::CRITICAL, $message, $context);
     }
 
-    public function error($message, array $context = array()) {
+    public function error($message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::ERROR,$message, $context);
     }
 
-    public function warning($message, array $context = array()) {
+    public function warning($message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::WARNING, $message, $context);
     }
 
-    public function notice($message, array $context = array()) {
+    public function notice($message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::NOTICE, $message, $context);
     }
 
-    public function info($message, array $context = array()) {
+    public function info($message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::INFO, $message, $context);
     }
 
-    public function debug($message, array $context = array()) {
-        $this->addMessage(self::DEBUG, $message, $context);
+    public function debug($message, array $context = array(), int $line=null) : void  {
+        $this->addMessage(self::DEBUG, $message, $context, $line);
     }
 
-    public function log($level, $message, array $context = array()) {
+    public function log($level, $message, array $context = array(), int $line=null) : void  {
         $this->addMessage(self::LOG, $message, $context);
     }
 }
