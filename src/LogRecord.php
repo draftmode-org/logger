@@ -1,7 +1,6 @@
 <?php
 
 namespace Terrazza\Component\Logger;
-
 use DateTime;
 
 class LogRecord {
@@ -11,7 +10,6 @@ class LogRecord {
     private string $logLevelName;
     private string $logMessage;
     private array $context;
-    private ?array $initContext;
 
     /**
      * @param DateTime $logDate
@@ -20,15 +18,13 @@ class LogRecord {
      * @param string $logLevelName
      * @param string $logMessage
      * @param array|null $context
-     * @param array|null $initContext
      */
     protected function __construct(DateTime $logDate,
                                    string $loggerName,
                                    int $logLevel,
                                    string $logLevelName,
                                    string $logMessage,
-                                   array $context=null,
-                                   ?array $initContext=null)
+                                   array $context=null)
     {
         $this->logDate                              = $logDate;
         $this->loggerName                           = $loggerName;
@@ -36,7 +32,6 @@ class LogRecord {
         $this->logLevelName                         = $logLevelName;
         $this->logMessage                           = $logMessage;
         $this->context                              = $context ?? [];
-        $this->initContext                          = $initContext;
     }
 
     /**
@@ -45,23 +40,20 @@ class LogRecord {
      * @param string $logLevelName
      * @param string $logMessage
      * @param array|null $context
-     * @param array|null $initContext
      * @return LogRecord
      */
     public static function createRecord(string $loggerName,
                                         int $logLevel,
                                         string $logLevelName,
                                         string $logMessage,
-                                        array $context=null,
-                                        ?array $initContext=null): LogRecord {
+                                        array $context=null): LogRecord {
         return new self(
             new DateTime(),
             $loggerName,
             $logLevel,
             $logLevelName,
             $logMessage,
-            $context,
-            $initContext
+            $context
         );
     }
 
@@ -117,7 +109,7 @@ class LogRecord {
      * @return mixed|null
      */
     public function shiftContext(string $contextKey) {
-        if (array_key_exists($contextKey, $this->context)) {
+        if ($this->hasContextKey($contextKey)) {
             $context                                = $this->context[$contextKey];
             unset($this->context[$contextKey]);
             return $context;
@@ -127,9 +119,18 @@ class LogRecord {
     }
 
     /**
-     * @return array|null
+     * @param string $contextKey
+     * @return mixed|null
      */
-    public function getInitContext(): ?array {
-        return $this->initContext;
+    public function getContextValue(string $contextKey) {
+        return $this->context[$contextKey] ?? null;
+    }
+
+    /**
+     * @param string $contextKey
+     * @return bool
+     */
+    public function hasContextKey(string $contextKey) : bool {
+        return array_key_exists($contextKey, $this->context);
     }
 }

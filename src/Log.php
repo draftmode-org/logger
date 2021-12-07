@@ -28,11 +28,12 @@ class Log implements LogInterface {
 
     private string $loggerName;
     private ?string $method                         = null;
+    private ?string $namespace                      = null;
+    private array $context                          = [];
     /**
      * @var array|LogHandlerInterface[]
      */
     private array $handlers;
-    private ?array $initContext                     = null;
     private array $ignoreLogLevels                  = [];
     private array $ignoreLogLevelHandlers           = [];
 
@@ -41,25 +42,71 @@ class Log implements LogInterface {
         $this->handlers                             = $handler ?? [];
     }
 
+    /**
+     * @param LogHandlerInterface $handler
+     * @return LogInterface
+     */
     public function withHandler(LogHandlerInterface $handler) : LogInterface {
         $logger                                     = clone $this;
         $logger->handlers[]                         = $handler;
         return $logger;
     }
 
+    /**
+     * @param string $namespace
+     * @return LogInterface
+     */
+    public function withNamespace(string $namespace) : LogInterface {
+        $logger                                     = clone $this;
+        $logger->namespace                          = $namespace;
+        return $logger;
+    }
+
+    /**
+     * @param string $method
+     * @return LogInterface
+     */
     public function withMethod(string $method) : LogInterface {
         $logger                                     = clone $this;
         $logger->method                             = $method;
         return $logger;
     }
 
-    public function withInitContext(array $context) : LogInterface {
+    /**
+     * @param array $context
+     * @return LogInterface
+     */
+    public function withContext(array $context) : LogInterface {
         $logger                                     = clone $this;
-        $logger->initContext                        = $context;
+        $logger->context                            = $context;
         return $logger;
     }
 
-    private function pushIgnoreLogLevelHandler(int $logLevel, LogHandlerInterface $handler) : void {
+    /**
+     * @param string $contextKey
+     * @param mixed $value
+     */
+    public function addContextValue(string $contextKey, $value) : void {
+        $this->context[$contextKey]                 = $value;
+    }
+
+    /**
+     * @param string $contextKey
+     * @return mixed|null
+     */
+    public function getContextValue(string $contextKey) {
+        return $this->context[$contextKey] ?? null;
+    }
+
+    /**
+     * @param string $contextKey
+     * @return bool
+     */
+    public function hasContextKey(string $contextKey) : bool {
+        return array_key_exists($contextKey, $this->context);
+    }
+
+    private function pushSkipLogLevelHandler(int $logLevel, LogHandlerInterface $handler) : void {
         if (!array_key_exists($logLevel, $this->ignoreLogLevelHandlers)) {
             $this->ignoreLogLevelHandlers[$logLevel] = [];
         }
@@ -72,7 +119,7 @@ class Log implements LogInterface {
         }
     }
 
-    private function ignoreLogLevelHandler(int $logLevel) : bool {
+    private function skipLogLevel(int $logLevel) : bool {
         return (in_array($logLevel, $this->ignoreLogLevels));
     }
 
@@ -83,23 +130,34 @@ class Log implements LogInterface {
      */
     private function addMessage(int $logLevel, $message, array $context=[]) : void {
         //
-        if ($this->ignoreLogLevelHandler($logLevel)) return;
+        //
+        //
+        if ($this->skipLogLevel($logLevel)) return;
+        //
+        // push forward method + namespace into context
         //
         $context["method"]                          = $this->method;
+        $context["namespace"]                       = $this->namespace;
+        //
+        //
+        //
+        if (count($this->context)) {
+            $context                                = $this->context + $context;
+        }
+        //
         $logRecord                                  = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
             self::$levels[$logLevel],
             $message,
-            $context,
-            $this->initContext);
+            $context);
 
         foreach ($this->handlers as $handler) {
             if ($handler->isHandling($logRecord)) {
                 $handler->write($logRecord);
             } else {
                 if (!$handler->hasLogPatterns()) {
-                    $this->pushIgnoreLogLevelHandler($logLevel, $handler);
+                    $this->pushSkipLogLevelHandler($logLevel, $handler);
                 }
             }
         }
