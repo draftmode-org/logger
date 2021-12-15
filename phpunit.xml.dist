@@ -32,5 +32,14 @@
     <testsuite name="Handler">
       <directory>./tests/Handler</directory>
     </testsuite>
+    <testsuite name="Normalizer">
+      <directory>./tests/Normalizer</directory>
+    </testsuite>
+    <testsuite name="Writer">
+      <directory>./tests/Writer</directory>
+    </testsuite>
+    <!--<testsuite name="Examples">
+      <directory>./tests/Examples</directory>
+    </testsuite>-->
   </testsuites>
 </phpunit>

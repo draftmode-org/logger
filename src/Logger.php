@@ -1,7 +1,7 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-class Log implements LogInterface {
+class Logger implements LoggerInterface {
     public const LOG                                = 50;
     public const DEBUG                              = 100;
     public const INFO                               = 200;
@@ -29,24 +29,23 @@ class Log implements LogInterface {
     private string $loggerName;
     private ?string $method                         = null;
     private ?string $namespace                      = null;
-    private array $context                          = [];
+    private array $context;
     /**
-     * @var array|LogHandlerInterface[]
+     * @var array|HandlerInterface[]
      */
     private array $handlers;
-    private array $ignoreLogLevels                  = [];
-    private array $ignoreLogLevelHandlers           = [];
 
-    public function __construct(string $loggerName, LogHandlerInterface ...$handler) {
+    public function __construct(string $loggerName, ?array $context=null, HandlerInterface ...$handler) {
         $this->loggerName                           = $loggerName;
         $this->handlers                             = $handler ?? [];
+        $this->context                              = $context ?? [];
     }
 
     /**
-     * @param LogHandlerInterface $handler
-     * @return LogInterface
+     * @param HandlerInterface $handler
+     * @return LoggerInterface
      */
-    public function withHandler(LogHandlerInterface $handler) : LogInterface {
+    public function withHandler(HandlerInterface $handler) : LoggerInterface {
         $logger                                     = clone $this;
         $logger->handlers[]                         = $handler;
         return $logger;
@@ -54,9 +53,9 @@ class Log implements LogInterface {
 
     /**
      * @param string $namespace
-     * @return LogInterface
+     * @return LoggerInterface
      */
-    public function withNamespace(string $namespace) : LogInterface {
+    public function withNamespace(string $namespace) : LoggerInterface {
         $logger                                     = clone $this;
         $logger->namespace                          = $namespace;
         return $logger;
@@ -64,9 +63,9 @@ class Log implements LogInterface {
 
     /**
      * @param string $method
-     * @return LogInterface
+     * @return LoggerInterface
      */
-    public function withMethod(string $method) : LogInterface {
+    public function withMethod(string $method) : LoggerInterface {
         $logger                                     = clone $this;
         $logger->method                             = $method;
         return $logger;
@@ -74,53 +73,12 @@ class Log implements LogInterface {
 
     /**
      * @param array $context
-     * @return LogInterface
+     * @return LoggerInterface
      */
-    public function withContext(array $context) : LogInterface {
+    public function withContext(array $context) : LoggerInterface {
         $logger                                     = clone $this;
         $logger->context                            = $context;
         return $logger;
-    }
-
-    /**
-     * @param string $contextKey
-     * @param mixed $value
-     */
-    public function addContextValue(string $contextKey, $value) : void {
-        $this->context[$contextKey]                 = $value;
-    }
-
-    /**
-     * @param string $contextKey
-     * @return mixed|null
-     */
-    public function getContextValue(string $contextKey) {
-        return $this->context[$contextKey] ?? null;
-    }
-
-    /**
-     * @param string $contextKey
-     * @return bool
-     */
-    public function hasContextKey(string $contextKey) : bool {
-        return array_key_exists($contextKey, $this->context);
-    }
-
-    private function pushSkipLogLevelHandler(int $logLevel, LogHandlerInterface $handler) : void {
-        if (!array_key_exists($logLevel, $this->ignoreLogLevelHandlers)) {
-            $this->ignoreLogLevelHandlers[$logLevel] = [];
-        }
-        $handlerClassName                           = get_class($handler);
-        if (!in_array($handlerClassName, $this->ignoreLogLevelHandlers[$logLevel])) {
-            array_push($this->ignoreLogLevelHandlers[$logLevel], $handlerClassName);
-        }
-        if (count($this->ignoreLogLevelHandlers[$logLevel]) === count($this->handlers)) {
-            array_push($this->ignoreLogLevels, $logLevel);
-        }
-    }
-
-    private function skipLogLevel(int $logLevel) : bool {
-        return (in_array($logLevel, $this->ignoreLogLevels));
     }
 
     /**
@@ -130,35 +88,24 @@ class Log implements LogInterface {
      */
     private function addMessage(int $logLevel, $message, array $context=[]) : void {
         //
-        //
-        //
-        if ($this->skipLogLevel($logLevel)) return;
-        //
-        // push forward method + namespace into context
-        //
-        $context["method"]                          = $this->method;
-        $context["namespace"]                       = $this->namespace;
-        //
-        //
+        // context will be extended / overloaded by global context
         //
         if (count($this->context)) {
-            $context                                = $this->context + $context;
+            $context                                = $context + $this->context;
         }
         //
-        $logRecord                                  = LogRecord::createRecord(
+        $record = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
-            self::$levels[$logLevel],
             $message,
-            $context);
+            $this->namespace,
+            $this->method,
+            $context ?? []
+        );
 
         foreach ($this->handlers as $handler) {
-            if ($handler->isHandling($logRecord)) {
-                $handler->write($logRecord);
-            } else {
-                if (!$handler->hasLogPatterns()) {
-                    $this->pushSkipLogLevelHandler($logLevel, $handler);
-                }
+            if ($handler->isHandling($record)) {
+                $handler->write($record);
             }
         }
     }

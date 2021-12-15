@@ -1,48 +1,69 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Common;
+use DateTime;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Log;
+use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\LogRecord;
 
 class LogRecordTest extends TestCase {
 
     function testClassCreate() {
-        $record = LogRecord::createRecord(
+        $record = new LogRecordTestLogRecord(
+                $logDate = new DateTime(),
             $loggerName = "loggerName",
-            $logLevel = Log::DEBUG,
-            $logLevelName = Log::$levels[Log::DEBUG],
+            $logLevel = Logger::DEBUG,
             $logMessage = "myMessage",
-            [$cKey = "key" => $cValue = "value"]
+                $memUsed = 1,
+            $memAllocated = 2,
+            $namespace = __NAMESPACE__,
+            $method = __METHOD__,
+            $context = ["key" => "value"]
         );
+        $dateFormat = "Y-m-d";
         $this->assertEquals([
-            $loggerName,
+            $logDate->format($dateFormat),
             $logLevel,
-            $logLevelName,
+            $logLevelName = Logger::$levels[$logLevel],
+            $loggerName,
             $logMessage,
-            (new \DateTime())->format("d.m.Y"),
-
-            true,
-            false,
-            $cValue,
-            1,
-
-            null,
-            $cValue
+            $namespace,
+            $method,
+            $memUsed,
+            $memAllocated,
+            $context,
+            [
+                'Date' 				=> (new \DateTime)->format($dateFormat),
+                'Level' 			=> $logLevel,
+                'LevelName' 		=> $logLevelName,
+                'LoggerName' 		=> $loggerName,
+                'Namespace'			=> $namespace,
+                'sNamespace'		=> basename($namespace),
+                'Method'			=> $method,
+                'sMethod'			=> basename($method),
+                'MemUsed'			=> $memUsed,
+                'MemAllocated'		=> $memAllocated,
+                'Message' 			=> $logMessage,
+                'Context'			=> $context
+            ]
         ],[
-            $record->getLoggerName(),
+            $record->getLogDate()->format($dateFormat),
             $record->getLogLevel(),
             $record->getLogLevelName(),
+            $record->getLoggerName(),
             $record->getLogMessage(),
-            $record->getLogDate()->format("d.m.Y"),
-
-            $record->hasContextKey($cKey),
-            $record->hasContextKey($cKey."unknown"),
-            $record->getContextValue($cKey),
-            count($record->getContext()),
-
-            $record->shiftContext($cKey."unknown"),
-            $record->shiftContext($cKey),
+            $record->getNamespace(),
+            $record->getMethod(),
+            $record->getMemUsed(),
+            $record->getMemAllocated(),
+            $record->getContext(),
+            $record->getToken($dateFormat),
         ]);
     }
 
+}
+
+class LogRecordTestLogRecord extends LogRecord {
+    public function __construct(DateTime $logDate, string $loggerName, int $logLevel, string $logMessage, int $memUsed, int $memAllocated, string $namespace = null, string $method = null, array $context = null) {
+        parent::__construct($logDate, $loggerName, $logLevel, $logMessage, $memUsed, $memAllocated, $namespace, $method, $context);
+    }
 }
