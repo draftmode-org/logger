@@ -5,7 +5,7 @@ namespace Terrazza\Component\Logger;
 interface FormatterInterface {
     /**
      * @param LogRecord $logRecord
-     * @return mixed
+     * @return string
      */
-    public function format(LogRecord $logRecord);
+    public function format(LogRecord $logRecord) : string;
 }

@@ -55,4 +55,31 @@ class NormalizeFlatTest extends TestCase {
         $actual     = $normalizer->convertTokenValue($tKey, $tValue, "%tokenKey:%s");
         $this->assertEquals($expected, $actual);
     }
+
+    function testConvertTokenValues() {
+        $normalizer = new NormalizeFlat("|");
+        $tKey       = "key";
+        $tValues    = ["loggerName" => $loggerName = "loggerName", "level" => $level=2];
+        $expected   = "ln:$loggerName:l:$level";
+        $actual     = $normalizer->convertTokenValues($tKey, $tValues, "ln:%s:l:%s");
+        $this->assertEquals($expected, $actual);
+    }
+
+    function testConvertTokenValuesWithoutFormat() {
+        $normalizer = new NormalizeFlat($delimiter = "|");
+        $tKey       = "key";
+        $tValues    = ["loggerName" => $loggerName = "loggerName", "level" => $level=2];
+        $expected   = "$loggerName$delimiter$level";
+        $actual     = $normalizer->convertTokenValues($tKey, $tValues);
+        $this->assertEquals($expected, $actual);
+    }
+
+    function testConvertTokenValuesWithTokenKey() {
+        $normalizer = new NormalizeFlat("|");
+        $tKey       = "key";
+        $tValues    = ["loggerName" => $loggerName = "loggerName", "level" => $level=2];
+        $expected   = "$tKey:ln:$loggerName:l:$level";
+        $actual     = $normalizer->convertTokenValues($tKey, $tValues, "%tokenKey:ln:%s:l:%s");
+        $this->assertEquals($expected, $actual);
+    }
 }

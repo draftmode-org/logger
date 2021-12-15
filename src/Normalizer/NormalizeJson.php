@@ -30,6 +30,20 @@ class NormalizeJson implements NormalizerInterface {
     }
 
     /**
+     * @param string $tokenKey
+     * @param array $tokenValues
+     * @param string|null $responseFormat
+     * @return mixed
+     */
+    public function convertTokenValues(string $tokenKey, array $tokenValues, ?string $responseFormat = null) {
+        if (count($tokenValues) > 1) {
+            return $tokenValues;
+        } else {
+            return array_shift($tokenValues);
+        }
+    }
+
+    /**
      * @param array $response
      * @return string
      */

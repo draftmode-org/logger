@@ -4,10 +4,10 @@ use \Psr\Log\LoggerInterface as PSRLoggerInterface;
 
 interface LoggerInterface extends PSRLoggerInterface {
     /**
-     * @param HandlerInterface $handler
+     * @param ChannelHandlerInterface $channel
      * @return LoggerInterface
      */
-    public function withHandler(HandlerInterface $handler) : LoggerInterface;
+    public function withChannel(ChannelHandlerInterface $handler) : LoggerInterface;
 
     /**
      * @param string $namespace

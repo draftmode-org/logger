@@ -39,8 +39,7 @@ class ArrayFormatter implements FormatterInterface {
                         $tokenValues[$tokenKey]     = $tokenValue;
                     }
                 }, $responseFormat);
-                //$response[$responseKey]             = sprintf($responseFormat, ...$tokenValues);
-                $response[$responseKey]             = $this->normalizer->convertTokenValue($responseKey, $tokenValues, $responseFormat);
+                $response[$responseKey]             = $this->normalizer->convertTokenValues($responseKey, $tokenValues, $responseFormat);
             }
         }
         return $this->normalizer->convertLine($response);

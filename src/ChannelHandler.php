@@ -20,18 +20,11 @@ class ChannelHandler implements ChannelHandlerInterface {
     }
 
     /**
-     * @return LogWriterInterface
-     */
-    public function getWriter() : LogWriterInterface {
-        return $this->writer;
-    }
-
-    /**
      * @param LogRecord $record
      */
     public function write(LogRecord $record) : void {
         $this->writer->write(
-            $this->formatter->format($record).PHP_EOL
+            $this->formatter->format($record)
         );
     }
 }

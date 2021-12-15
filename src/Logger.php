@@ -31,23 +31,23 @@ class Logger implements LoggerInterface {
     private ?string $namespace                      = null;
     private array $context;
     /**
-     * @var array|HandlerInterface[]
+     * @var array|ChannelHandlerInterface[]
      */
-    private array $handlers;
+    private array $channel;
 
-    public function __construct(string $loggerName, ?array $context=null, HandlerInterface ...$handler) {
+    public function __construct(string $loggerName, ?array $context=null, ChannelHandlerInterface ...$channel) {
         $this->loggerName                           = $loggerName;
-        $this->handlers                             = $handler ?? [];
+        $this->channel                              = $channel ?? [];
         $this->context                              = $context ?? [];
     }
 
     /**
-     * @param HandlerInterface $handler
+     * @param ChannelHandlerInterface $channel
      * @return LoggerInterface
      */
-    public function withHandler(HandlerInterface $handler) : LoggerInterface {
+    public function withChannel(ChannelHandlerInterface $channel) : LoggerInterface {
         $logger                                     = clone $this;
-        $logger->handlers[]                         = $handler;
+        $logger->channel[]                          = $channel;
         return $logger;
     }
 
@@ -103,14 +103,14 @@ class Logger implements LoggerInterface {
             $context ?? []
         );
 
-        foreach ($this->handlers as $handler) {
+        foreach ($this->channel as $channel) {
             if ($handler->isHandling($record)) {
                 $handler->write($record);
             }
         }
     }
 
-    public function emergency($message, array $context = array(), int $line=null) : void {
+    public function emergency($message, array $context = array()) : void {
         $this->addMessage(self::EMERGENCY, $message, $context);
     }
 

@@ -34,4 +34,10 @@ class ArrayFormatterTest extends TestCase {
         $formatter  = new ArrayFormatter(["LoggerName" =>"{LoggerName}ln:%s", "Level"], "d.m.Y", $normalizer);
         $this->assertEquals(join($delimiter, ["ln:loggerName", Logger::DEBUG]), $formatter->format($this->getRecord()));
     }
+
+    function testNormalizeFlatWithConcatFormat() {
+        $normalizer = new NormalizeFlat("|");
+        $formatter  = new ArrayFormatter(["LoggerName" =>"{LoggerName}{Level}ln:%s:l:%s"], "d.m.Y", $normalizer);
+        $this->assertEquals("ln:loggerName:l:".Logger::DEBUG, $formatter->format($this->getRecord()));
+    }
 }
