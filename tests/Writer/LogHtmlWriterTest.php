@@ -10,7 +10,7 @@ class LogHtmlWriterTest extends TestCase {
         $writer = new LogHtmlWriter(null, true);
         ob_start();
         $writer->write($message = "myMessage");
-        $actual = ob_get_flush();
+        $actual = ob_get_clean();
         $this->assertEquals("$message<br>", $actual);
     }
 
@@ -18,7 +18,7 @@ class LogHtmlWriterTest extends TestCase {
         $writer = new LogHtmlWriter("<span>%s</span>");
         ob_start();
         $writer->write($message = "myMessage");
-        $actual = ob_get_flush();
+        $actual = ob_get_clean();
         $this->assertEquals("<span>$message</span>", $actual);
     }
 }
