@@ -3,7 +3,7 @@
 namespace Terrazza\Component\Logger;
 use DateTime;
 
-class LogRecord {
+class Record {
     private \DateTime $logDate;
     private string $loggerName;
     private int $logLevel;
@@ -53,14 +53,14 @@ class LogRecord {
      * @param string|null $namespace
      * @param string|null $method
      * @param array|null $context
-     * @return LogRecord
+     * @return Record
      */
     public static function createRecord(string $loggerName,
                                         int $logLevel,
                                         string $logMessage,
                                         ?string $namespace=null,
                                         ?string $method=null,
-                                        array $context=null): LogRecord {
+                                        array $context=null): Record {
         return new self(
             new DateTime(),
             $loggerName,

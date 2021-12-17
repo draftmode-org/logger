@@ -2,7 +2,7 @@
 
 namespace Terrazza\Component\Logger;
 
-class ChannelHandler implements ChannelHandlerInterface {
+class Channel implements ChannelInterface {
     private string $name;
     private LogWriterInterface $writer;
     private FormatterInterface $formatter;
@@ -20,11 +20,16 @@ class ChannelHandler implements ChannelHandlerInterface {
     }
 
     /**
-     * @param LogRecord $record
+     * @return FormatterInterface
      */
-    public function write(LogRecord $record) : void {
-        $this->writer->write(
-            $this->formatter->format($record)
-        );
+    public function getFormatter() : FormatterInterface {
+        return $this->formatter;
+    }
+
+    /**
+     * @return LogWriterInterface
+     */
+    public function getWriter() : LogWriterInterface {
+        return $this->writer;
     }
 }

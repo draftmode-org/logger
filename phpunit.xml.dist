@@ -38,8 +38,8 @@
     <testsuite name="Writer">
       <directory>./tests/Writer</directory>
     </testsuite>
-    <!--<testsuite name="Examples">
-      <directory>./tests/Examples</directory>
-    </testsuite>-->
+    <testsuite name="Examples">
+      <directory>./tests/_Examples</directory>
+    </testsuite>
   </testsuites>
 </phpunit>

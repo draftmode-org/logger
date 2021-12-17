@@ -2,27 +2,39 @@
 namespace Terrazza\Component\Logger\Formatter;
 
 use Terrazza\Component\Logger\FormatterInterface;
-use Terrazza\Component\Logger\LogRecord;
+use Terrazza\Component\Logger\Record;
 use Terrazza\Component\Logger\NormalizerInterface;
 
 class ArrayFormatter implements FormatterInterface {
     use FormatterTrait;
-    CONST DEFAULT_FORMAT 							= "%s";
     private array $format;
     private NormalizerInterface $normalizer;
     private string $logDateFormat;
 
-    public function __construct(array $format, string $logDateFormat, NormalizerInterface $normalizer) {
-        $this->format 								= $format;
+    public function __construct(string $logDateFormat, NormalizerInterface $normalizer, array $format=null) {
         $this->normalizer 							= $normalizer;
         $this->logDateFormat 						= $logDateFormat;
+        $this->format                               = $format ?? [];
     }
 
     /**
-     * @param LogRecord $record
+     * @param array $format
+     * @return FormatterInterface
+     */
+    public function withFormat($format) : FormatterInterface {
+        if (!is_array($format)) {
+            throw new FormatterException("format type expected array, given ".gettype($format));
+        }
+        $formatter                                  = clone $this;
+        $formatter->format                          = $format;
+        return $formatter;
+    }
+
+    /**
+     * @param Record $record
      * @return string
      */
-    public function format(LogRecord $record) : string {
+    public function formatRecord(Record $record) : string {
         $token										= $record->getToken($this->logDateFormat);
         $response 									= [];
         foreach ($this->format as $responseKey => $responseFormat) {

@@ -12,8 +12,7 @@ trait FormatterTrait {
             if (array_key_exists($tokenKey, $token)) {
                 $token								= $token[$tokenKey];
             } else {
-                $token 								= null;
-                break;
+                return null;
             }
         }
         return $token;

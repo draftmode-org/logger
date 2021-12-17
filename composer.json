@@ -25,5 +25,10 @@
             "Terrazza\\Component\\Logger\\" : "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Terrazza\\Component\\Logger\\Tests\\_Mocks\\" : "tests/_Mocks"
+        }
+    },
     "minimum-stability": "dev"
 }

@@ -4,21 +4,16 @@ use Terrazza\Component\Logger\Handler\StreamHandlerWriteException;
 
 interface HandlerInterface {
     /**
-     * @return int
-     */
-    public function getLogLevel() : int;
-
-    /**
-     * @param LogRecord $logRecord
+     * @param Record $record
      * @return bool
      */
-    public function isHandling(LogRecord $logRecord) : bool;
+    public function isHandling(Record $record) : bool;
 
     /**
-     * @param LogRecord $logRecord
+     * @param Record $record
      * @throws StreamHandlerWriteException
      */
-    public function write(LogRecord $logRecord) : void;
+    public function writeRecord(Record $record) : void;
 
     public function close() : void;
 }

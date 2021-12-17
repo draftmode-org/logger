@@ -3,12 +3,12 @@ namespace Terrazza\Component\Logger\Tests\Common;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Logger;
-use Terrazza\Component\Logger\LogRecord;
+use Terrazza\Component\Logger\Record;
 
 class LogRecordTest extends TestCase {
 
     function testClassCreate() {
-        $record = new LogRecordTestLogRecord(
+        $record = new LogRecordTestRecord(
                 $logDate = new DateTime(),
             $loggerName = "loggerName",
             $logLevel = Logger::DEBUG,
@@ -62,7 +62,7 @@ class LogRecordTest extends TestCase {
 
 }
 
-class LogRecordTestLogRecord extends LogRecord {
+class LogRecordTestRecord extends Record {
     public function __construct(DateTime $logDate, string $loggerName, int $logLevel, string $logMessage, int $memUsed, int $memAllocated, string $namespace = null, string $method = null, array $context = null) {
         parent::__construct($logDate, $loggerName, $logLevel, $logMessage, $memUsed, $memAllocated, $namespace, $method, $context);
     }

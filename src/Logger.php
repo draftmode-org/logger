@@ -31,23 +31,23 @@ class Logger implements LoggerInterface {
     private ?string $namespace                      = null;
     private array $context;
     /**
-     * @var array|ChannelHandlerInterface[]
+     * @var array|HandlerInterface[]
      */
-    private array $channel;
+    private array $handler;
 
-    public function __construct(string $loggerName, ?array $context=null, ChannelHandlerInterface ...$channel) {
+    public function __construct(string $loggerName, ?array $context=null, HandlerInterface ...$handler) {
         $this->loggerName                           = $loggerName;
-        $this->channel                              = $channel ?? [];
+        $this->handler                              = $handler ?? [];
         $this->context                              = $context ?? [];
     }
 
     /**
-     * @param ChannelHandlerInterface $channel
+     * @param HandlerInterface $handler
      * @return LoggerInterface
      */
-    public function withChannel(ChannelHandlerInterface $channel) : LoggerInterface {
+    public function withHandler(HandlerInterface $handler) : LoggerInterface {
         $logger                                     = clone $this;
-        $logger->channel[]                          = $channel;
+        $logger->handler[]                          = $handler;
         return $logger;
     }
 
@@ -72,13 +72,35 @@ class Logger implements LoggerInterface {
     }
 
     /**
-     * @param array $context
-     * @return LoggerInterface
+     * @param string $key
+     * @return bool
      */
-    public function withContext(array $context) : LoggerInterface {
-        $logger                                     = clone $this;
-        $logger->context                            = $context;
-        return $logger;
+    public function hasContextKey(string $key) : bool {
+        $token                                      = $this->context;
+        foreach (explode(".", $key) as $tokenKey) {
+            if (array_key_exists($tokenKey, $token)) {
+                $token								= $token[$tokenKey];
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param string $key
+     * @return mixed
+     */
+    public function getContextKey(string $key) {
+        $token                                      = $this->context;
+        foreach (explode(".", $key) as $tokenKey) {
+            if (array_key_exists($tokenKey, $token)) {
+                $token								= $token[$tokenKey];
+            } else {
+                return null;
+            }
+        }
+        return $token;
     }
 
     /**
@@ -94,7 +116,7 @@ class Logger implements LoggerInterface {
             $context                                = $context + $this->context;
         }
         //
-        $record = LogRecord::createRecord(
+        $record = Record::createRecord(
             $this->loggerName,
             $logLevel,
             $message,
@@ -103,9 +125,9 @@ class Logger implements LoggerInterface {
             $context ?? []
         );
 
-        foreach ($this->channel as $channel) {
+        foreach ($this->handler as $handler) {
             if ($handler->isHandling($record)) {
-                $handler->write($record);
+                $handler->writeRecord($record);
             }
         }
     }
