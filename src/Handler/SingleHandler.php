@@ -7,7 +7,7 @@ use Terrazza\Component\Logger\IHandler;
 use Terrazza\Component\Logger\Record;
 use Terrazza\Component\Logger\IWriter;
 
-class SingleIHandler implements IHandler {
+class SingleHandler implements IHandler {
     private HandlerPattern $pattern;
     private IWriter $writer;
     private IFormatter $formatter;

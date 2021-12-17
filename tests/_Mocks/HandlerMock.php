@@ -7,7 +7,7 @@ use Terrazza\Component\Logger\IChannelHandler;
 use Terrazza\Component\Logger\IChannel;
 use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
-use Terrazza\Component\Logger\Handler\SingleIHandler;
+use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
 use Terrazza\Component\Logger\Normalizer\NormalizeFlat;
 use Terrazza\Component\Logger\Writer\StreamWriter;
@@ -37,7 +37,7 @@ class HandlerMock {
     }
 
     public static function getSingleHandler(HandlerPattern $pattern, array $format) : IHandler {
-        return new SingleIHandler(
+        return new SingleHandler(
             $pattern,
             self::getChannel(),
             $format
