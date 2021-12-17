@@ -2,16 +2,16 @@
 
 namespace Terrazza\Component\Logger\Handler;
 
-use Terrazza\Component\Logger\ChannelHandlerInterface;
-use Terrazza\Component\Logger\ChannelInterface;
-use Terrazza\Component\Logger\HandlerInterface;
+use Terrazza\Component\Logger\IChannelHandler;
+use Terrazza\Component\Logger\IChannel;
+use Terrazza\Component\Logger\IHandler;
 use Terrazza\Component\Logger\Record;
 
-class ChannelHandler implements HandlerInterface, ChannelHandlerInterface {
-    /** @var array|HandlerInterface[] */
+class ChannelHandler implements IHandler, IChannelHandler {
+    /** @var array|IHandler[] */
     private array $handler=[];
-    private ChannelInterface $channel;
-    public function __construct(ChannelInterface $channel) {
+    private IChannel $channel;
+    public function __construct(IChannel $channel) {
         $this->channel                              = $channel;
     }
 
@@ -21,7 +21,7 @@ class ChannelHandler implements HandlerInterface, ChannelHandlerInterface {
      */
     public function pushHandler(HandlerPattern $pattern, $format) : void {
         $hashKey                                    = $pattern->getLogLevel();
-        $this->handler[$hashKey]                    = new SingleHandler($pattern, $this->channel, $format);
+        $this->handler[$hashKey]                    = new SingleIHandler($pattern, $this->channel, $format);
         krsort($this->handler);
     }
     /**

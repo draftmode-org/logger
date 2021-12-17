@@ -2,9 +2,9 @@
 
 namespace Terrazza\Component\Logger\Normalizer;
 
-use Terrazza\Component\Logger\NormalizerInterface;
+use Terrazza\Component\Logger\INormalizer;
 
-class NormalizeFlat implements NormalizerInterface {
+class NormalizeFlat implements INormalizer {
     use NormalizerTrait;
     private string $delimiter;
     public function __construct(string $delimiter) {

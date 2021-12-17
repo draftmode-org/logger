@@ -1,8 +1,8 @@
 <?php
 namespace Terrazza\Component\Logger\Writer;
-use Terrazza\Component\Logger\LogWriterInterface;
+use Terrazza\Component\Logger\IWriter;
 
-class LogHtmlWriter implements LogWriterInterface {
+class HtmlWriter implements IWriter {
     private string $htmlWrap;
     public function __construct(?string $htmlWrap=null, ?bool $addLineBreak=false) {
         $this->htmlWrap     = $htmlWrap ?: "%s";

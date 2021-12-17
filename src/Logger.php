@@ -1,7 +1,7 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-class Logger implements LoggerInterface {
+class Logger implements ILogger {
     public const LOG                                = 50;
     public const DEBUG                              = 100;
     public const INFO                               = 200;
@@ -31,21 +31,21 @@ class Logger implements LoggerInterface {
     private ?string $namespace                      = null;
     private array $context;
     /**
-     * @var array|HandlerInterface[]
+     * @var array|IHandler[]
      */
     private array $handler;
 
-    public function __construct(string $loggerName, ?array $context=null, HandlerInterface ...$handler) {
+    public function __construct(string $loggerName, ?array $context=null, IHandler ...$handler) {
         $this->loggerName                           = $loggerName;
         $this->handler                              = $handler ?? [];
         $this->context                              = $context ?? [];
     }
 
     /**
-     * @param HandlerInterface $handler
-     * @return LoggerInterface
+     * @param IHandler $handler
+     * @return ILogger
      */
-    public function withHandler(HandlerInterface $handler) : LoggerInterface {
+    public function withHandler(IHandler $handler) : ILogger {
         $logger                                     = clone $this;
         $logger->handler[]                          = $handler;
         return $logger;
@@ -53,9 +53,9 @@ class Logger implements LoggerInterface {
 
     /**
      * @param string $namespace
-     * @return LoggerInterface
+     * @return ILogger
      */
-    public function withNamespace(string $namespace) : LoggerInterface {
+    public function withNamespace(string $namespace) : ILogger {
         $logger                                     = clone $this;
         $logger->namespace                          = $namespace;
         return $logger;
@@ -63,9 +63,9 @@ class Logger implements LoggerInterface {
 
     /**
      * @param string $method
-     * @return LoggerInterface
+     * @return ILogger
      */
-    public function withMethod(string $method) : LoggerInterface {
+    public function withMethod(string $method) : ILogger {
         $logger                                     = clone $this;
         $logger->method                             = $method;
         return $logger;
@@ -91,7 +91,7 @@ class Logger implements LoggerInterface {
      * @param string $key
      * @return mixed
      */
-    public function getContextKey(string $key) {
+    public function getContextByKey(string $key) {
         $token                                      = $this->context;
         foreach (explode(".", $key) as $tokenKey) {
             if (array_key_exists($tokenKey, $token)) {

@@ -1,8 +1,8 @@
 <?php
 namespace Terrazza\Component\Logger\Writer;
-use Terrazza\Component\Logger\LogWriterInterface;
+use Terrazza\Component\Logger\IWriter;
 
-class LogStreamWriter implements LogWriterInterface {
+class StreamWriter implements IWriter {
     private string $stream;
     public function __construct(string $stream) {
         $this->stream = $stream;
@@ -10,7 +10,7 @@ class LogStreamWriter implements LogWriterInterface {
 
     public function write(string $record) : void {
         if (@file_put_contents($this->stream, $record.PHP_EOL) === false) {
-            throw new LogWriterException($this->stream);
+            throw new WriterException($this->stream);
         }
     }
 }

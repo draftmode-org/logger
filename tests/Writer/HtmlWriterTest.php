@@ -2,12 +2,12 @@
 namespace Terrazza\Component\Logger\Tests\Writer;
 
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Writer\LogHtmlWriter;
+use Terrazza\Component\Logger\Writer\HtmlWriter;
 
-class LogHtmlWriterTest extends TestCase {
+class HtmlWriterTest extends TestCase {
 
     function testSuccessfulWithLineBreak() {
-        $writer = new LogHtmlWriter(null, true);
+        $writer = new HtmlWriter(null, true);
         ob_start();
         $writer->write($message = "myMessage");
         $actual = ob_get_clean();
@@ -15,7 +15,7 @@ class LogHtmlWriterTest extends TestCase {
     }
 
     function testSuccessfulWithHtmlWrapper() {
-        $writer = new LogHtmlWriter("<span>%s</span>");
+        $writer = new HtmlWriter("<span>%s</span>");
         ob_start();
         $writer->write($message = "myMessage");
         $actual = ob_get_clean();

@@ -2,6 +2,6 @@
 
 namespace Terrazza\Component\Logger;
 
-interface LogWriterInterface {
+interface IWriter {
     public function write(string $record) : void;
 }

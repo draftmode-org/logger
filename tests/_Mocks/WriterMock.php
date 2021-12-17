@@ -1,7 +1,7 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\_Mocks;
-use Terrazza\Component\Logger\LogWriterInterface;
+use Terrazza\Component\Logger\IWriter;
 
-class WriterMock implements LogWriterInterface {
+class WriterMock implements IWriter {
     public function write(string $record): void {}
 }

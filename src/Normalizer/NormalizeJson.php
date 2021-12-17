@@ -1,8 +1,8 @@
 <?php
 namespace Terrazza\Component\Logger\Normalizer;
-use Terrazza\Component\Logger\NormalizerInterface;
+use Terrazza\Component\Logger\INormalizer;
 
-class NormalizeJson implements NormalizerInterface {
+class NormalizeJson implements INormalizer {
     use NormalizerTrait;
     const DEFAULT_ENCODE_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR;
     private int $encodeFlags;

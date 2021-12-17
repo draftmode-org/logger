@@ -1,17 +1,17 @@
 <?php
 namespace Terrazza\Component\Logger\Formatter;
 
-use Terrazza\Component\Logger\FormatterInterface;
+use Terrazza\Component\Logger\IFormatter;
 use Terrazza\Component\Logger\Record;
-use Terrazza\Component\Logger\NormalizerInterface;
+use Terrazza\Component\Logger\INormalizer;
 
-class ArrayFormatter implements FormatterInterface {
+class ArrayFormatter implements IFormatter {
     use FormatterTrait;
     private array $format;
-    private NormalizerInterface $normalizer;
+    private INormalizer $normalizer;
     private string $logDateFormat;
 
-    public function __construct(string $logDateFormat, NormalizerInterface $normalizer, array $format=null) {
+    public function __construct(string $logDateFormat, INormalizer $normalizer, array $format=null) {
         $this->normalizer 							= $normalizer;
         $this->logDateFormat 						= $logDateFormat;
         $this->format                               = $format ?? [];
@@ -19,9 +19,9 @@ class ArrayFormatter implements FormatterInterface {
 
     /**
      * @param array $format
-     * @return FormatterInterface
+     * @return IFormatter
      */
-    public function withFormat($format) : FormatterInterface {
+    public function withFormat($format) : IFormatter {
         if (!is_array($format)) {
             throw new FormatterException("format type expected array, given ".gettype($format));
         }

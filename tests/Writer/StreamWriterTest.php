@@ -1,10 +1,10 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Writer;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Writer\LogStreamWriter;
-use Terrazza\Component\Logger\Writer\LogWriterException;
+use Terrazza\Component\Logger\Writer\StreamWriter;
+use Terrazza\Component\Logger\Writer\WriterException;
 
-class LogStreamTest extends TestCase {
+class StreamWriterTest extends TestCase {
     public string $stream="tests/Writer/stream.txt";
     function setUp(): void {
         @unlink($this->stream);
@@ -14,7 +14,7 @@ class LogStreamTest extends TestCase {
     }
 
     function testSuccessful() {
-        $writer = new LogStreamWriter($this->stream);
+        $writer = new StreamWriter($this->stream);
         $writer->write($record="myMessage");
         $this->assertEquals(
             $record.PHP_EOL,
@@ -23,8 +23,8 @@ class LogStreamTest extends TestCase {
     }
 
     function testFailure() {
-        $writer = new LogStreamWriter("folder/file.txt");
-        $this->expectException(LogWriterException::class);
+        $writer = new StreamWriter("folder/file.txt");
+        $this->expectException(WriterException::class);
         $writer->write("myMessage");
     }
 }

@@ -2,11 +2,11 @@
 
 namespace Terrazza\Component\Logger;
 
-class Channel implements ChannelInterface {
+class Channel implements IChannel {
     private string $name;
-    private LogWriterInterface $writer;
-    private FormatterInterface $formatter;
-    public function __construct(string $name, LogWriterInterface $writer, FormatterInterface $formatter) {
+    private IWriter $writer;
+    private IFormatter $formatter;
+    public function __construct(string $name, IWriter $writer, IFormatter $formatter) {
         $this->name 								= $name;
         $this->writer 								= $writer;
         $this->formatter 							= $formatter;
@@ -20,16 +20,16 @@ class Channel implements ChannelInterface {
     }
 
     /**
-     * @return FormatterInterface
+     * @return IFormatter
      */
-    public function getFormatter() : FormatterInterface {
+    public function getFormatter() : IFormatter {
         return $this->formatter;
     }
 
     /**
-     * @return LogWriterInterface
+     * @return IWriter
      */
-    public function getWriter() : LogWriterInterface {
+    public function getWriter() : IWriter {
         return $this->writer;
     }
 }

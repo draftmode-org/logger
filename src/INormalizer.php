@@ -1,7 +1,7 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-interface NormalizerInterface {
+interface INormalizer {
     /**
      * @param string $tokenKey
      * @param $tokenValue

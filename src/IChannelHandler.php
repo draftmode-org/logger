@@ -4,7 +4,7 @@ namespace Terrazza\Component\Logger;
 
 use Terrazza\Component\Logger\Handler\HandlerPattern;
 
-interface ChannelHandlerInterface {
+interface IChannelHandler {
     /**
      * @param HandlerPattern $pattern
      * @param mixed $format

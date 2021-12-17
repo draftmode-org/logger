@@ -2,15 +2,15 @@
 namespace Terrazza\Component\Logger\Tests\_Mocks;
 
 use Terrazza\Component\Logger\Channel;
-use Terrazza\Component\Logger\ChannelHandlerInterface;
-use Terrazza\Component\Logger\ChannelInterface;
-use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
+use Terrazza\Component\Logger\IChannelHandler;
+use Terrazza\Component\Logger\IChannel;
+use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
-use Terrazza\Component\Logger\Handler\SingleHandler;
-use Terrazza\Component\Logger\HandlerInterface;
+use Terrazza\Component\Logger\Handler\SingleIHandler;
+use Terrazza\Component\Logger\IHandler;
 use Terrazza\Component\Logger\Normalizer\NormalizeFlat;
-use Terrazza\Component\Logger\Writer\LogStreamWriter;
+use Terrazza\Component\Logger\Writer\StreamWriter;
 
 class HandlerMock {
     CONST stream="tests/Writer/stream.txt";
@@ -24,20 +24,20 @@ class HandlerMock {
         return trim(file_get_contents(self::stream));
     }
 
-    public static function getChannel() : ChannelInterface {
+    public static function getChannel() : IChannel {
         return new Channel(
             "channel",
-            new LogStreamWriter(self::stream),
+            new StreamWriter(self::stream),
             new ArrayFormatter("d.m.Y", new NormalizeFlat("|"))
         );
     }
 
-    public static function getChannelHandler() : ChannelHandlerInterface {
+    public static function getChannelHandler() : IChannelHandler {
         return new ChannelHandler(self::getChannel());
     }
 
-    public static function getSingleHandler(HandlerPattern $pattern, array $format) : HandlerInterface {
-        return new SingleHandler(
+    public static function getSingleHandler(HandlerPattern $pattern, array $format) : IHandler {
+        return new SingleIHandler(
             $pattern,
             self::getChannel(),
             $format

@@ -2,12 +2,12 @@
 
 namespace Terrazza\Component\Logger;
 
-interface FormatterInterface {
+interface IFormatter {
     /**
      * @param mixed $format
-     * @return FormatterInterface
+     * @return IFormatter
      */
-    public function withFormat($format) : FormatterInterface;
+    public function withFormat($format) : IFormatter;
 
     /**
      * @param Record $record

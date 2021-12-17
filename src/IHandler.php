@@ -2,7 +2,7 @@
 namespace Terrazza\Component\Logger;
 use Terrazza\Component\Logger\Handler\StreamHandlerWriteException;
 
-interface HandlerInterface {
+interface IHandler {
     /**
      * @param Record $record
      * @return bool
