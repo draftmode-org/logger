@@ -6,6 +6,8 @@ This component is an implementation of PSR/Log standard with some extensions.
    2. [withNamespace](#logger-withnamespace)
    3. [withMethod](#logger-withmethod)
    4. [Context](#logger-context)
+2. [Install](#install)
+3. [Requirements](#require)
 
 <a id="logger" name="logger"></a>
 <a id="user-content-logger" name="user-content-logger"></a>
@@ -93,3 +95,21 @@ $logger->getContextKey("user.name"); // Max
 $logger->getContextKey("user.email"); // null
 ```
 
+<a id="install" name="install"></a>
+<a id="user-content-install" name="user-content-install"></a>
+## How to install
+### Install via composer
+```
+composer require terrazza/logger
+```
+<a id="require" name="require"></a>
+<a id="user-content-require" name="user-content-require"></a>
+## Requirements
+### php version
+- \>= 7.4
+### composer packages
+- psr/log
+
+<a id="examples" name="examples"/></a>
+<a id="user-content-examples" name="user-content-examples"/></a>
+## Examples
