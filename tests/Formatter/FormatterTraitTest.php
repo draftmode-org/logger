@@ -4,6 +4,9 @@ namespace Terrazza\Component\Logger\Tests\Formatter;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\TextUI\RuntimeException;
 use Terrazza\Component\Logger\Formatter\FormatterTrait;
+use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockMain;
+use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockParent1;
+use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockParent2;
 
 class FormatterTraitTest extends TestCase {
 
@@ -114,7 +117,7 @@ class FormatterTraitTest extends TestCase {
     function testExceptionWith1Parent() {
         $formatter      = new FormatterTraitTestTrait();
         $token          = [];
-        $parent1Class   = new FormatterTraitTestExceptionParent1;
+        $parent1Class   = new FormatterExceptionMockParent1;
         try {
             $line       = __LINE__ + 1;
             $parent1Class->getExceptionWith1Parent(12);
@@ -127,7 +130,7 @@ class FormatterTraitTest extends TestCase {
             $traceCount,
             $line,
             $parent1Class->getExceptionLine(),
-            (new FormatterTraitTestExceptionMain)->getExceptionLine(),
+            (new FormatterExceptionMockMain)->getExceptionLine(),
         ],[
             count($trace),
             $trace[0]["line"],
@@ -139,7 +142,7 @@ class FormatterTraitTest extends TestCase {
     function testExceptionWith2Parents() {
         $formatter      = new FormatterTraitTestTrait();
         $token          = [];
-        $parent2Class   = new FormatterTraitTestExceptionParent2;
+        $parent2Class   = new FormatterExceptionMockParent2;
         try {
             $line       = __LINE__ + 1;
             $parent2Class->getExceptionWith2Parent($arg = 12);
@@ -152,8 +155,8 @@ class FormatterTraitTest extends TestCase {
             $traceCount,
             $line,
             $parent2Class->getExceptionLine(),
-            (new FormatterTraitTestExceptionParent1)->getExceptionLine(),
-            (new FormatterTraitTestExceptionMain)->getExceptionLine(),
+            (new FormatterExceptionMockParent1)->getExceptionLine(),
+            (new FormatterExceptionMockMain)->getExceptionLine(),
 
             [$arg],
             [$arg*2],
@@ -173,45 +176,7 @@ class FormatterTraitTest extends TestCase {
         ]);
     }
 }
-class FormatterTraitTestExceptionMain {
-    public int $exceptionLine=__LINE__+2;
-    public function getException(int $arg) {
-        throw new RuntimeException("exception in ".__METHOD__);
-    }
-    public function getExceptionLine() :int {
-        return $this->exceptionLine;
-    }
-}
-class FormatterTraitTestExceptionParent2 {
-    public int $exceptionLine=__LINE__+4;
-    public function getExceptionWith2Parent(int $arg) {
-        try {
-            $parent1Exception = new FormatterTraitTestExceptionParent1();
-            $parent1Exception->getExceptionWith1Parent($arg*2);
-        }
-        catch (\Throwable $exception) {
-            throw new RuntimeException("exception in ".__METHOD__, 0, $exception);
-        }
-    }
-    public function getExceptionLine() :int {
-        return $this->exceptionLine;
-    }
-}
-class FormatterTraitTestExceptionParent1 {
-    public int $exceptionLine=__LINE__+4;
-    public function getExceptionWith1Parent(int $arg) {
-        try {
-            $mainException = new FormatterTraitTestExceptionMain();
-            $mainException->getException($arg*2);
-        }
-        catch (\Throwable $exception) {
-            throw new RuntimeException("exception in ".__METHOD__, 0, $exception);
-        }
-    }
-    public function getExceptionLine() :int {
-        return $this->exceptionLine;
-    }
-}
+
 class FormatterTraitTestTrait {
     use FormatterTrait;
     public function _getTokenValue(array $token, string $findKey) {

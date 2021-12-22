@@ -1,23 +1,19 @@
 <?php
 namespace Terrazza\Component\Logger\Formatter;
-
 use Throwable;
-
-trait FormatterTrait
-{
+trait FormatterTrait {
     /**
      * @param array $token
      * @param string $findKey
      * @return mixed|null
      */
-    private function getTokenValue(array $token, string $findKey)
-    {
-        $tokenKeys = explode(".", $findKey);
+    private function getTokenValue(array $token, string $findKey) {
+        $tokenKeys                                  = explode(".", $findKey);
         while (count($tokenKeys)) {
             $tokenKey = array_shift($tokenKeys);
             if (is_array($token)) {
                 if (array_key_exists($tokenKey, $token)) {
-                    $token = $token[$tokenKey];
+                    $token                          = $token[$tokenKey];
                 } elseif ($tokenKey === "*") {
                     return $token;
                 } else {
@@ -94,6 +90,9 @@ trait FormatterTrait
         $trace                                      = $exception->getTrace();
         for ($iTrace = 0; $iTrace < count($trace); $iTrace=$iTrace+2) {
             $message                                = $this->getTraceMessage($trace, $iTrace);
+            if ($iTrace === 0) {
+                $message                            = array_merge(["message" => $exception->getMessage()], $message);
+            }
             if (!$this->pushMessage($message)) break;
             if ($previous = $exception->getPrevious()) {
                 $this->convertException($previous, $exception);
