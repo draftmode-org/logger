@@ -10,62 +10,6 @@ use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockParent2;
 
 class FormatterTraitTest extends TestCase {
 
-    function testString() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => $tValue = "tValue"];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, $tKey));
-    }
-
-    function testNotFound() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = ["tKey" => "tValue"];
-        $this->assertEquals(null, $formatter->_getTokenValue($token, "unknown"));
-    }
-
-    function testArray() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => $tValue = ["tValue"]];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, $tKey));
-    }
-
-    function testInArrayAsString() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => [$tInKey = "tInKey" => $tValue = "tInValue"]];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, "$tKey.$tInKey"));
-    }
-
-
-    function testNotFoundInArray() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => ["tInKey" => "tInValue"]];
-        $this->assertEquals(null, $formatter->_getTokenValue($token, "$tKey.unknown"));
-    }
-
-    function testInArrayAsArray() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => [$tInKey = "tInKey" => $tValue = ["tInValue"]]];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, "$tKey.$tInKey"));
-    }
-
-    function testInArrayInArrayAsString() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => [$tInKey = "tInKey" => [$tInInKey = "tInInKey" => $tValue = "tInValue"]]];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, "$tKey.$tInKey.$tInInKey"));
-    }
-
-    function testInArrayInArrayAsArray() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = [$tKey = "tKey" => [$tInKey = "tInKey" => [$tInInKey = "tInInKey" => $tValue = ["tInValue"]]]];
-        $this->assertEquals($tValue, $formatter->_getTokenValue($token, "$tKey.$tInKey.$tInInKey"));
-    }
-
-    function testInArrayAll() {
-        $formatter  = new FormatterTraitTestTrait();
-        $token      = ["Context" => $context = ["key1" => "value1", "key2" => "value2"], "someOtherKey" => "someOtherValue"];
-        $actual     = $formatter->_getTokenValue($token, "Context.*");
-        $this->assertEquals($context, $actual);
-    }
-
     function xtestException() {
         $formatter  = new FormatterTraitTestTrait();
         $token      = ["exception" => new RuntimeException("myException")];

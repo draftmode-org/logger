@@ -2,18 +2,18 @@
 namespace Terrazza\Component\Logger\Formatter;
 
 use Terrazza\Component\Logger\IFormatter;
+use Terrazza\Component\Logger\IRecordTokenReader;
 use Terrazza\Component\Logger\Record;
 use Terrazza\Component\Logger\INormalizer;
 
 class ArrayFormatter implements IFormatter {
-    use FormatterTrait;
     private array $format;
+    private IRecordTokenReader $recordTokenReader;
     private INormalizer $normalizer;
-    private string $logDateFormat;
 
-    public function __construct(string $logDateFormat, INormalizer $normalizer, array $format=null) {
+    public function __construct(IRecordTokenReader $recordTokenReader, INormalizer $normalizer, array $format=null) {
+        $this->recordTokenReader 					= $recordTokenReader;
         $this->normalizer 							= $normalizer;
-        $this->logDateFormat 						= $logDateFormat;
         $this->format                               = $format ?? [];
     }
 
@@ -35,19 +35,19 @@ class ArrayFormatter implements IFormatter {
      * @return string
      */
     public function formatRecord(Record $record) : string {
-        $token										= $record->getToken($this->logDateFormat);
+        $token										= $record->getToken();
         $response 									= [];
         foreach ($this->format as $responseKey => $responseFormat) {
             if (is_numeric($responseKey)) {
                 $responseKey 						= $responseFormat;
-                if ($tokenValue = $this->getTokenValue($token, $responseKey)) {
+                if ($tokenValue = $this->recordTokenReader->getValue($token, $responseKey)) {
                     $response[$responseKey]		    = $this->normalizer->convertTokenValue($responseKey, $tokenValue);
                 }
             } else {
                 $tokenValues                        = [];
                 $responseFormat                     = preg_replace_callback("/{(.*?)}/", function ($matches) use ($token, &$tokenValues) {
                     $tokenKey                       = $matches[1];
-                    if ($tokenValue = $this->getTokenValue($token, $tokenKey)) {
+                    if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
                         $tokenValues[$tokenKey]     = $tokenValue;
                     }
                 }, $responseFormat);

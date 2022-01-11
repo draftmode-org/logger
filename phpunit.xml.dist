@@ -38,6 +38,9 @@
     <testsuite name="Writer">
       <directory>./tests/Writer</directory>
     </testsuite>
+    <testsuite name="RecordToken">
+      <directory>./tests/RecordToken</directory>
+    </testsuite>
     <testsuite name="Examples">
       <directory>./tests/_Examples</directory>
     </testsuite>

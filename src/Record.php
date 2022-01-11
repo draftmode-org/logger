@@ -151,12 +151,11 @@ class Record {
     }
 
     /**
-     * @param string $dateFormat
      * @return array
      */
-    public function getToken(string $dateFormat="Y-m-d H:i:s.u") : array {
+    public function getToken() : array {
         return [
-            'Date' 				=> $this->getLogDate()->format($dateFormat),
+            'Date' 				=> $this->getLogDate(),
             'Level' 			=> $this->getLogLevel(),
             'LevelName'     	=> $this->getLogLevelName(),
             'LoggerName' 		=> $this->getLoggerName(),

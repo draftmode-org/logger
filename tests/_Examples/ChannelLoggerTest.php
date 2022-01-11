@@ -1,5 +1,5 @@
 <?php
-namespace Terrazza\Component\Logger\Tests\Common;
+namespace Terrazza\Component\Logger\Tests\_Examples;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Logger;

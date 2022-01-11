@@ -56,6 +56,11 @@ class NormalizeFlatTest extends TestCase {
         $this->assertEquals($expected, $actual);
     }
 
+    function testConvertTokenValuesEmpty() {
+        $normalizer = new NormalizeFlat("|");
+        $this->assertEquals("", $normalizer->convertTokenValues("key", []));
+    }
+
     function testConvertTokenValues() {
         $normalizer = new NormalizeFlat("|");
         $tKey       = "key";

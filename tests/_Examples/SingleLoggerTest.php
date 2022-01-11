@@ -1,5 +1,5 @@
 <?php
-namespace Terrazza\Component\Logger\Tests\Common;
+namespace Terrazza\Component\Logger\Tests\_Examples;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Logger;
@@ -19,11 +19,11 @@ class SingleLoggerTest extends TestCase {
     function testWithHandler() {
         $logger = (new Logger($loggerName = "loggerName"))->withHandler(HandlerMock::getSingleHandler(
             new HandlerPattern(Logger::WARNING),
-            ["LoggerName", "Level", "Message"]
+            ["Date", "LoggerName", "Level", "Message"]
         ));
         $logger->error($message = "message");
         $this->assertEquals(
-            "$loggerName|".Logger::ERROR."|$message",
+            (new \DateTime())->format("Y-m-d")."|$loggerName|".Logger::ERROR."|$message",
             HandlerMock::getContent()
         );
     }

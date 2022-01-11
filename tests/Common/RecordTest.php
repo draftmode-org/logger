@@ -32,7 +32,7 @@ class LogRecordTest extends TestCase {
             $memAllocated,
             $context,
             [
-                'Date' 				=> (new \DateTime)->format($dateFormat),
+                'Date' 				=> $logDate,
                 'Level' 			=> $logLevel,
                 'LevelName' 		=> $logLevelName,
                 'LoggerName' 		=> $loggerName,
@@ -56,7 +56,7 @@ class LogRecordTest extends TestCase {
             $record->getMemUsed(),
             $record->getMemAllocated(),
             $record->getContext(),
-            $record->getToken($dateFormat),
+            $record->getToken(),
         ]);
     }
 

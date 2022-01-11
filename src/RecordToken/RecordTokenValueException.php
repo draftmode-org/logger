@@ -1,42 +1,18 @@
 <?php
-namespace Terrazza\Component\Logger\Formatter;
-use Throwable;
-trait FormatterTrait {
-    /**
-     * @param array $token
-     * @param string $findKey
-     * @return mixed|null
-     */
-    private function getTokenValue(array $token, string $findKey) {
-        $tokenKeys                                  = explode(".", $findKey);
-        while (count($tokenKeys)) {
-            $tokenKey = array_shift($tokenKeys);
-            if (is_array($token)) {
-                if (array_key_exists($tokenKey, $token)) {
-                    $token                          = $token[$tokenKey];
-                } elseif ($tokenKey === "*") {
-                    return $token;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-            if ($token instanceof Throwable) {
-                $traceMessageMax                    = array_shift($tokenKeys);
-                $traceMessageArgs                   = array_shift($tokenKeys);
-                $this->traceMessageMax              = $traceMessageMax ?? 0;
-                $this->traceMessageArgs             = (bool)$traceMessageArgs;
-                $this->convertException($token);
-                return $this->traceMessage;
-            }
-        }
-        return $token;
-    }
 
-    private int $traceMessageMax                    = 0;
-    private bool $traceMessageArgs                  = false;
+namespace Terrazza\Component\Logger\RecordToken;
+use Terrazza\Component\Logger\IRecordTokenValueConverter;
+use Throwable;
+
+class RecordTokenValueException implements IRecordTokenValueConverter {
+    private int $traceMessageMax;
+    private bool $traceMessageArgs;
     private array $traceMessage                     = [];
+
+    public function __construct(int $traceMessageMax=0, bool $traceMessageArgs=false) {
+        $this->traceMessageMax                      = $traceMessageMax;
+        $this->traceMessageArgs                     = $traceMessageArgs;
+    }
 
     /**
      * @param array $traceMessage
@@ -113,4 +89,12 @@ trait FormatterTrait {
         }
     }
 
+    /**
+     * @param Throwable $value
+     * @return array
+     */
+    public function getValue($value) {
+        $this->convertException($value);
+        return $this->traceMessage;
+    }
 }

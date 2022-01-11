@@ -9,7 +9,10 @@ use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
+use Terrazza\Component\Logger\IRecordTokenReader;
 use Terrazza\Component\Logger\Normalizer\NormalizeFlat;
+use Terrazza\Component\Logger\RecordToken\RecordTokenReader;
+use Terrazza\Component\Logger\RecordToken\RecordTokenValueDate;
 use Terrazza\Component\Logger\Writer\StreamWriter;
 
 class HandlerMock {
@@ -23,23 +26,26 @@ class HandlerMock {
     public static function getContent() : string {
         return trim(file_get_contents(self::stream));
     }
+    public static function getTokenReader(string $dateFormat) : IRecordTokenReader {
+        return new RecordTokenReader(["Date" => new RecordTokenValueDate($dateFormat)]);
+    }
 
-    public static function getChannel() : IChannel {
+    public static function getChannel(string $dateFormat) : IChannel {
         return new Channel(
             "channel",
             new StreamWriter(self::stream),
-            new ArrayFormatter("d.m.Y", new NormalizeFlat("|"))
+            new ArrayFormatter(self::getTokenReader($dateFormat), new NormalizeFlat("|"))
         );
     }
 
-    public static function getChannelHandler() : IChannelHandler {
-        return new ChannelHandler(self::getChannel());
+    public static function getChannelHandler(string $dateFormat="Y-m-d") : IChannelHandler {
+        return new ChannelHandler(self::getChannel($dateFormat));
     }
 
-    public static function getSingleHandler(HandlerPattern $pattern, array $format) : IHandler {
+    public static function getSingleHandler(HandlerPattern $pattern, array $format, string $dateFormat="Y-m-d") : IHandler {
         return new SingleHandler(
             $pattern,
-            self::getChannel(),
+            self::getChannel($dateFormat),
             $format
         );
     }
