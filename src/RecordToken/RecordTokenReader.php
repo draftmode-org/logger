@@ -18,6 +18,10 @@ class RecordTokenReader implements IRecordTokenReader {
         }
     }
 
+    /**
+     * @param string $tokenKey
+     * @param IRecordTokenValueConverter $valueConverter
+     */
     public function pushValueConverter(string $tokenKey, IRecordTokenValueConverter $valueConverter) : void {
         $this->valueConverter[$tokenKey]            = $valueConverter;
     }

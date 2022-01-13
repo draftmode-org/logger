@@ -22,7 +22,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Terrazza\\Component\\Logger\\" : "src"
+            "Terrazza\\Component\\Logger\\" : "src",
+            "Terrazza\\Component\\Logger\\Utility\\" : "utility"
         }
     },
     "autoload-dev": {

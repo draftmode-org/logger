@@ -1,9 +1,9 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\RecordToken;
 use PHPUnit\Framework\TestCase;
+use Terrazza\Component\Logger\IRecordTokenValueConverter;
 use Terrazza\Component\Logger\RecordToken\RecordTokenReader;
 use Terrazza\Component\Logger\RecordToken\RecordTokenReaderException;
-use Terrazza\Component\Logger\RecordToken\RecordTokenValueDate;
 
 class RecordTokenReaderTest extends TestCase {
     function testInvalidConverter() {
@@ -11,12 +11,12 @@ class RecordTokenReaderTest extends TestCase {
         new RecordTokenReader(["x" => "y"]);
     }
 
-    function testPushDateConverter() {
+    function testPushUtilityDateConverter() {
         $reader = new RecordTokenReader();
-        $reader->pushValueConverter("Date", new RecordTokenValueDate($dateFormat = "Y-m-d"));
+        $reader->pushValueConverter("value", new RecordTokenReaderTestValueConverter());
         $this->assertEquals(
-            (new \DateTime())->format($dateFormat),
-            $reader->getValue(["Date" => new \DateTime()], "Date")
+            $value = "value",
+            $reader->getValue(["value" => $value], "value")
         );
     }
 
@@ -75,9 +75,15 @@ class RecordTokenReaderTest extends TestCase {
     }
 
     function testInArrayAll() {
-        $reader = new RecordTokenReader();
+        $reader     = new RecordTokenReader();
         $token      = ["Context" => $context = ["key1" => "value1", "key2" => "value2"], "someOtherKey" => "someOtherValue"];
         $actual     = $reader->getValue($token, "Context.*");
         $this->assertEquals($context, $actual);
+    }
+}
+
+class RecordTokenReaderTestValueConverter implements IRecordTokenValueConverter {
+    public function getValue($value) {
+        return $value;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Terrazza\Component\Logger\RecordToken;
+namespace Terrazza\Component\Logger\Utility\RecordToken;
 use DateTime;
 use Terrazza\Component\Logger\IRecordTokenValueConverter;
 

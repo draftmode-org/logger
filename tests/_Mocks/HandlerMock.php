@@ -34,7 +34,8 @@ class HandlerMock {
         return new Channel(
             "channel",
             new StreamWriter(self::stream),
-            new ArrayFormatter(self::getTokenReader($dateFormat), new NormalizeFlat("|"))
+            //new ArrayFormatter(self::getTokenReader($dateFormat), new NormalizeFlat("|"))
+            new ArrayFormatter(new RecordTokenReader, new NormalizeFlat("|"))
         );
     }
 

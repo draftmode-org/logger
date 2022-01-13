@@ -12,17 +12,17 @@ This component is an implementation of PSR/Log standard with some extensions.
    2. [Record](#object-record)
    3. [Channel](#object-channel)
    4. [Formatter](#object-formatter)
-   5. Handler
+   5. Writer
+      1. [StreamWriter](object-writer-stream)
+      2. [HtmlWriter](#object-writer-html)
+   6. Handler
       1. [ChannelHandler](#object-channel-handler)
       2. [SingleHandler](#object-single-handler)
       3. [HandlerPattern](#object-handler-pattern)
-   6. [Normalizer](#object-normalizer)
-   7. Writer
-      1. [StreamWriter](object-writer-stream)
-      2. [HtmlWriter](#object-writer-html)
-2. [Install](#install)
-3. [Requirements](#require)
-4. [Examples](#examples)
+   7. [Normalizer](#object-normalizer)
+3. [Install](#install)
+4. [Requirements](#require)
+5. [Examples](#examples)
 
 <a id="object-logger" name="object-logger"></a>
 <a id="user-content-object-logger" name="user-content-object-logger"></a>
@@ -115,15 +115,18 @@ $logger->getContextByKey("user.email"); // null
 ### Record
 Against the common PSR implementation our component deals with an object and not an array.<br>
 LogRecord properties:
-- logDate (\Datetime)
-- loggerName (string)
-- logLevel (string)
-- logMessage (string)
-- context (array)
-- memUsed (int)
-- memAllocated (int)
-- namespace (string, optional)
-- method (string, optional)
+- Date (\Datetime)
+- Level (int)
+- LevelName (string)
+- LoggerName (string) 
+- Namespace (string, optional)
+- sNamespace (string, optional) (_basename(Namespace)_)
+- Method (string, optional)
+- sMethod (string, optional) (_basename(Method)_)
+- MemUsed (int)
+- MemAllocated (int)
+- Message (string)
+- Context (array) 
 #### method/static createRecord
 this method is used inside <i>Logger</i> to create a new LogRecord object.
 #### method: getToken(string $dateFormat)
@@ -148,40 +151,76 @@ return [
 <a id="object-channel" name="object-channel"></a>
 <a id="user-content-object-channel" name="user-content-object-channel"></a>
 ### Channel
-Each handler is initialized with 
-- a handlerPattern (currently only loglevel)
-- and a channel
-
-the channel provide the writer and the formatter. Therefore, the channel object determines the infrastructure and formatting type and prevent the handlers to use different ones.
+The channel covers the infrastructure (Writer) and formatting type (Formatter).
 
 <a id="object-formatter" name="object-formatter"></a>
 <a id="user-content-object-formatter" name="user-content-object-formatter"></a>
 ### Formatter
-A formatter is required to convert a record to a string by using a [Normalizer](#object-normlizer).<br>
-additional the formatter requires a logDateFormat (e.g. Y-m-d) to convert the record.logDate.<br>
+A formatter converts a record to a string by using<br>
+- RecordTokenReader
+- [Normalizer](#object-normlizer)
+- $format (array)
 <br>
-the channel provide the writer and the formatter. Therefore, the channel object determines the infrastructure and formatting type and prevent the handlers to use different ones.
-#### method: withMethod
+``["Date", "Message"]``
+#### RecordTokenReader
+The RecordTokenReader tries to find a key (e.g. ``Date``) in an array (_record 2 array_).<br>
+The RecordTokenReader itself can be extended with 0..n valueConverter.<br>
+A ValueConverter (IRecordTokenValueConverter) will be used to convert a value based on a key.
+#### method: withFormat
+...
+#### method: formatRecord
+Maps the Record against the $format and normalize the found value(s)
 
+##### example<br>
+The example uses a special formatter for the Record value "Date".
+````
+use DateTime;
+use Terrazza\Component\Logger\IRecordTokenValueConverter;
+use Terrazza\Component\Logger\Record;
+
+class RecordTokenValueDate implements IRecordTokenValueConverter {
+    private string $dateFormat;
+    public function __construct(string $dateFormat="Y-m-d H:i:s.u") {
+        $this->dateFormat                           = $dateFormat;
+    }
+    public function getValue($value) {
+        return $value->format($this->dateFormat);
+    }
+}
+
+$formatter = new ArrayFormatter(
+   new RecordTokenReader([
+      "Date" => new RecordTokenValueDate("Y-m-d H:i:s")
+   ]),
+   new NormalizerFlat("|"),
+   ["Date", "Message"]
+);   
+
+$example = new Example();
+$record  = Record::create("LoggerName", 100, "Message");
+echo $formatter->formatRecord($record); // 2022-12-31 23:59:01
+````
 
 ### Handler
-There are two different types of handler provided. In any case a handler is the connector for the logger to write a record.
+There are two different types of handler provided. In any case a handler is the interactor for the logger to write a record.
 
 <a id="object-channel-handler" name="object-channel-handler"></a>
 <a id="user-content-object-channel-handler" name="user-content-object-channel-handler"></a>
 #### ChannelHandler
-the ChannelHandler allows us to collect handler to the same channel. He protects, that every handler for this channel has 
+the ChannelHandler allows us to collect handler to the same channel. He takes care about, that every handler has 
 - the same formatter
 - the same normalizer
 - the same writer
-To use the channelHandler for the Logger itself he implements IHander, too.
+To use the channelHandler as a Logger itself he implements the IHander-Methods, too.
+
 #### method: pushHandler
 Method to add a new Handler within his [HandlerPattern](#object-handler-pattern) and format.
 
 <a id="object-single-handler" name="object-single-handler"></a>
 <a id="user-content-object-single-handler" name="user-content-object-single-handler"></a>
+
 #### SingleHandler
-The SingleHandler provides the common way to create a handler for the Logger.
+The SingleHandler provides the common way to create a handler for a Logger.
 The only difference to the common implementation: 
 - instead of logLevel, every handler is identified by a HandlerPattern
 - the SingleHandler has to be injected within a [Channel](#object-channel)
@@ -189,14 +228,13 @@ The only difference to the common implementation:
 <a id="object-handler-pattern" name="object-handler-pattern"></a>
 <a id="user-content-object-handler-pattern" name="user-content-object-handler-pattern"></a>
 #### HandlerPattern
-The HandlerPattern conver the unique identifier for a Handler. The common identifier is only the LogLevel.
-This component is prepared to get additional properties e.g. inclNamespace, exclNamespace, inclMethod, exclMethod.
+The HandlerPattern cover the unique identifier for a Handler. The common identifier is the LogLevel.
 
 <a id="object-normlizer" name="object-normlizer"></a>
 <a id="user-content-object-normlizer" name="user-content-object-normlizer"></a>
 ### Normalizer
 The normalizers are required to
-- convert a single value from the record into a "normalized" value
+- convert a single value from the Record into a "normalized" value
 - convert the full message into a "normalized" value.
 
 Every writer will require his own Normalizer and its up to the devs to initialize them however they want.
@@ -257,7 +295,10 @@ composer require terrazza/logger
 #### setup a channel
 ```
 $writer    = new StreamWriter("php://stdout");
-$formatter = new ArrayFormatter("Y-m-d H:i:s.u", new NormalizerFlat("|")); 
+$formatter = new ArrayFormatter(new RecordTokenReader([
+      "Date" => new RecordTokenValueDate("Y-m-d H:i:s.U"),
+      "Context.Exception" => new RecordTokenValueException(0, false), // maxTraceLevel=0, dumpArgs=false
+   ]), new NormalizerFlat("|")); 
 $channel   = new Channel("channelName", $writer, $formatter);
 ```
 ### Handler

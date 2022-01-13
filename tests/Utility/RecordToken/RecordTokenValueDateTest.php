@@ -1,7 +1,7 @@
 <?php
-namespace Terrazza\Component\Logger\Tests\RecordToken;
+namespace Terrazza\Component\Logger\Tests\Utility\RecordToken;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\RecordToken\RecordTokenValueDate;
+use Terrazza\Component\Logger\Utility\RecordToken\RecordTokenValueDate;
 
 class RecordTokenValueDateTest extends TestCase {
 

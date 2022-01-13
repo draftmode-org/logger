@@ -19,11 +19,11 @@ class SingleLoggerTest extends TestCase {
     function testWithHandler() {
         $logger = (new Logger($loggerName = "loggerName"))->withHandler(HandlerMock::getSingleHandler(
             new HandlerPattern(Logger::WARNING),
-            ["Date", "LoggerName", "Level", "Message"]
+            ["LoggerName", "Level", "Message"]
         ));
         $logger->error($message = "message");
         $this->assertEquals(
-            (new \DateTime())->format("Y-m-d")."|$loggerName|".Logger::ERROR."|$message",
+            "$loggerName|".Logger::ERROR."|$message",
             HandlerMock::getContent()
         );
     }

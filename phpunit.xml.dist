@@ -44,5 +44,8 @@
     <testsuite name="Examples">
       <directory>./tests/_Examples</directory>
     </testsuite>
+    <testsuite name="Utility">
+      <directory>./tests/Utility</directory>
+    </testsuite>
   </testsuites>
 </phpunit>
