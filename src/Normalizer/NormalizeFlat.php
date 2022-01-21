@@ -35,6 +35,8 @@ class NormalizeFlat implements INormalizer {
      */
     public function convertTokenValues(string $tokenKey, array $tokenValues, ?string $responseFormat = null) : string {
         if (count($tokenValues)) {
+            var_dump($tokenValues);
+            return join($this->delimiter, $tokenValues);
             if ($responseFormat) {
                 $responseFormat                     = $this->extendTokenKey($tokenKey, $responseFormat);
                 return sprintf($responseFormat, ...array_values($tokenValues));

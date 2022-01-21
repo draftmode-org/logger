@@ -39,19 +39,31 @@ class ArrayFormatter implements IFormatter {
         $response 									= [];
         foreach ($this->format as $responseKey => $responseFormat) {
             if (is_numeric($responseKey)) {
-                $responseKey 						= $responseFormat;
-                if ($tokenValue = $this->recordTokenReader->getValue($token, $responseKey)) {
+                $tokenKeys                          = explode("?", $responseFormat);
+                list($tokenKey,$tokenDefault)       = $tokenKeys;
+                if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
                     $response[$responseKey]		    = $this->normalizer->convertTokenValue($responseKey, $tokenValue);
+                } elseif ($tokenDefault) {
+                    $response[$responseKey]         = $tokenDefault;
                 }
             } else {
-                $tokenValues                        = [];
-                $responseFormat                     = preg_replace_callback("/{(.*?)}/", function ($matches) use ($token, &$tokenValues) {
-                    $tokenKey                       = $matches[1];
+                $hasTokenValue                      = false;
+                $tokenValue                         = preg_replace_callback("/{(.*?)}/", function ($matches) use ($token, &$hasTokenValue) {
+                    $tokenKeys                      = explode("?", $matches[1]);
+                    list($tokenKey,$tokenDefault)   = $tokenKeys;
                     if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
-                        $tokenValues[$tokenKey]     = $tokenValue;
+                        if ($noramlizedValue = $this->normalizer->convertTokenValue($tokenKey, $tokenValue)) {
+                            $hasTokenValue          = true;
+                            return $noramlizedValue;
+                        }
+                    } elseif ($tokenDefault) {
+                        $hasTokenValue              = true;
+                        return $tokenDefault;
                     }
                 }, $responseFormat);
-                $response[$responseKey]             = $this->normalizer->convertTokenValues($responseKey, $tokenValues, $responseFormat);
+                if ($hasTokenValue) {
+                    $response[$responseKey]         = $tokenValue;
+                }
             }
         }
         return $this->normalizer->convertLine($response);
