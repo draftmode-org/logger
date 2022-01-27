@@ -15,11 +15,15 @@ class RecordTokenValueExceptionTest extends TestCase {
         $value      = $reader->getValue($exception);
         $this->assertEquals(
             [
-                $message,
-                TestCase::class,
+                [[
+                    "message"   => $message,
+                    "class"     => RuntimeException::class,
+                    "file"      => __FILE__,
+                    "line"      => 14,
+                    "tLevel"    => 1,
+                ]]
             ], [
-                $value[0]["message"],
-                $value[0]["class"],
+                $value["message"],
             ]
         );
     }
@@ -32,17 +36,20 @@ class RecordTokenValueExceptionTest extends TestCase {
         } catch (\Throwable $exception) {}
         $traceCount     = 3;
         $reader         = new RecordTokenValueException($traceCount, false);
-        $trace          = $reader->getValue($exception);
+        $traces         = $reader->getValue($exception);
+        $trace          = $traces["trace"];
         $this->assertEquals([
             $traceCount,
+
             $line,
             $parent1Class->getExceptionLine(),
-            (new FormatterExceptionMockMain)->getExceptionLine(),
+            (new FormatterExceptionMockMain())->getExceptionLine(),
         ],[
             count($trace),
+
             $trace[0]["line"],
             $trace[1]["line"],
-            $trace[2]["line"]
+            $trace[2]["line"],
         ]);
     }
 
@@ -54,20 +61,24 @@ class RecordTokenValueExceptionTest extends TestCase {
         } catch (\Throwable $exception) {}
         $traceCount     = 4;
         $reader         = new RecordTokenValueException($traceCount, true);
-        $trace          = $reader->getValue($exception);
+        $traces         = $reader->getValue($exception);
+        $trace          = $traces["trace"];
         $this->assertEquals([
             $traceCount,
+
             $line,
             $parent2Class->getExceptionLine(),
             (new FormatterExceptionMockParent1)->getExceptionLine(),
-            (new FormatterExceptionMockMain)->getExceptionLine(),
+            (new FormatterExceptionMockMain())->getExceptionLine(),
 
             [$arg],
             [$arg*2],
             [$arg*4],
-            [$arg*4],
+            ["intValue" => $arg*4]
+
         ],[
             count($trace),
+
             $trace[0]["line"],
             $trace[1]["line"],
             $trace[2]["line"],
@@ -78,5 +89,21 @@ class RecordTokenValueExceptionTest extends TestCase {
             $trace[2]["args"],
             $trace[3]["args"],
         ]);
+    }
+
+    function xtestExceptionFiredWithParent() {
+        $parent1Class   = new FormatterExceptionMockParent1;
+        try {
+            $line           = __LINE__ + 1;
+            $response       = $parent1Class->createException($arg = 12);
+        } catch (\Throwable $exception) {
+            $traceCount     = 2;
+            $reader         = new RecordTokenValueException($traceCount, true);
+            $traces         = $reader->getValue($exception);
+            var_dump($traces);
+            var_dump($exception->getTrace());
+            var_dump($exception->getTraceAsString());
+        }
+        $this->assertTrue(true);
     }
 }

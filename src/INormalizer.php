@@ -14,7 +14,7 @@ interface INormalizer {
      * @param array $tokenValues
      * @param string|null $responseFormat
      */
-    public function convertTokenValues(string $tokenKey, array $tokenValues, ?string $responseFormat=null);
+    //public function convertTokenValues(string $tokenKey, array $tokenValues, ?string $responseFormat=null);
 
     /**
      * @param array $response

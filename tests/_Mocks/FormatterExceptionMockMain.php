@@ -4,8 +4,8 @@ use RuntimeException;
 
 class FormatterExceptionMockMain {
     public int $exceptionLine=__LINE__+2;
-    public function getMainException(int $arg) {
-        throw new RuntimeException("exception in ".__METHOD__);
+    public function getMainException(int $intValue) : int {
+        return $intValue/0;
     }
     public function getExceptionLine() :int {
         return $this->exceptionLine;

@@ -40,7 +40,8 @@ class ArrayFormatter implements IFormatter {
         foreach ($this->format as $responseKey => $responseFormat) {
             if (is_numeric($responseKey)) {
                 $tokenKeys                          = explode("?", $responseFormat);
-                list($tokenKey,$tokenDefault)       = $tokenKeys;
+                $tokenKey                           = array_shift($tokenKeys);
+                $tokenDefault                       = array_shift($tokenKeys);
                 if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
                     $response[$responseKey]		    = $this->normalizer->convertTokenValue($responseKey, $tokenValue);
                 } elseif ($tokenDefault) {
@@ -50,16 +51,18 @@ class ArrayFormatter implements IFormatter {
                 $hasTokenValue                      = false;
                 $tokenValue                         = preg_replace_callback("/{(.*?)}/", function ($matches) use ($token, &$hasTokenValue) {
                     $tokenKeys                      = explode("?", $matches[1]);
-                    list($tokenKey,$tokenDefault)   = $tokenKeys;
+                    $tokenKey                       = array_shift($tokenKeys);
+                    $tokenDefault                   = array_shift($tokenKeys);
                     if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
-                        if ($noramlizedValue = $this->normalizer->convertTokenValue($tokenKey, $tokenValue)) {
+                        if ($normalized = $this->normalizer->convertTokenValue($tokenKey, $tokenValue)) {
                             $hasTokenValue          = true;
-                            return $noramlizedValue;
+                            return $normalized;
                         }
                     } elseif ($tokenDefault) {
                         $hasTokenValue              = true;
                         return $tokenDefault;
                     }
+                    return $matches[1];
                 }, $responseFormat);
                 if ($hasTokenValue) {
                     $response[$responseKey]         = $tokenValue;

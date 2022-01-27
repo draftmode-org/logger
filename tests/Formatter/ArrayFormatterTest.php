@@ -51,14 +51,14 @@ class ArrayFormatterTest extends TestCase {
     function testWithFormat() {
         $normalizer = new NormalizeFlat($delimiter = "|");
         $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer,["LoggerName" =>"{LoggerName}ln:%s", "Level"]);
+        $formatter  = new ArrayFormatter($tokenReader, $normalizer,["LoggerName" =>"ln:{LoggerName}", "Level"]);
         $this->assertEquals(join($delimiter, ["ln:loggerName", Logger::DEBUG]), $formatter->formatRecord($this->getRecord()));
     }
 
     function testWithConcatFormat() {
         $normalizer = new NormalizeFlat("|");
         $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer, ["LoggerName" =>"{LoggerName}{Level}ln:%s:l:%s"]);
+        $formatter  = new ArrayFormatter($tokenReader, $normalizer, ["LoggerName" =>"ln:{LoggerName}:l:{Level}"]);
         $this->assertEquals("ln:loggerName:l:".Logger::DEBUG, $formatter->formatRecord($this->getRecord()));
     }
 }

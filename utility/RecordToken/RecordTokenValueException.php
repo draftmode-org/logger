@@ -7,86 +7,118 @@ use Throwable;
 class RecordTokenValueException implements IRecordTokenValueConverter {
     private int $traceMessageMax;
     private bool $traceMessageArgs;
-    private array $traceMessage                     = [];
+    private int $cTraceMessage                      = 0;
 
     public function __construct(int $traceMessageMax=0, bool $traceMessageArgs=false) {
         $this->traceMessageMax                      = $traceMessageMax;
         $this->traceMessageArgs                     = $traceMessageArgs;
-    }
-
-    /**
-     * @param array $traceMessage
-     * @return bool
-     */
-    private function pushMessage(array $traceMessage) : bool {
-        if (!$this->traceMessageMax || $this->traceMessageMax > count($this->traceMessage)) {
-            array_push($this->traceMessage, $traceMessage);
-            return true;
-        } else {
-            return false;
-        }
+        $this->cTraceMessage                        = 0;
     }
 
     /**
      * @param array $trace
-     * @param $iTrace
-     * @return array|string[]
+     * @param int $iTrace
+     * @param int $tLevel
+     * @return array
      */
-    private function getTraceMessage(array $trace, $iTrace) : array {
+    private function getTraceMessage(array $trace, int $iTrace, int $tLevel) : array {
         $line                                       = "-";
         $file                                       = "-";
+        $function                                   = "-";
         if (array_key_exists($iTrace, $trace)) {
             $line                                   = $trace[$iTrace]["line"] ?? "-";
             $file                                   = $trace[$iTrace]["file"] ?? "-";
+            $function                               = $trace[$iTrace]["function"] ?? "-";
         }
-        $function                                   = "-";
-        $class                                      = "-";
+        $nClass                                     = "-";
+        $nFunction                                  = "-";
         if (array_key_exists($iTrace+1, $trace)) {
-            $function                               = $trace[$iTrace+1]["function"] ?? "-";
-            $class                                  = $trace[$iTrace+1]["class"] ?? "-";
+            $nClass                                 = $trace[$iTrace+1]["class"] ?? "-";
+            $nFunction                              = $trace[$iTrace+1]["function"] ?? "-";
         }
         $message = [
-            "line"                                  => $line,
-            "function"                              => $function,
-            "class"                                 => $class,
             "file"                                  => $file,
+            "line"                                  => $line,
+            "class"                                 => $nClass,
+            "method"                                => $nFunction,
+            "tLevel"                                => $tLevel
         ];
         if ($this->traceMessageArgs && array_key_exists("args", $trace[$iTrace])) {
-            $message["args"]                        = $trace[$iTrace]["args"];
+            $args                                   = $trace[$iTrace]["args"];
+            if ($function === "__invoke" && is_array($args)) {
+                $in_array_file                      = $args[2] ?? "-";
+                $in_array_line                      = $args[3] ?? "-";
+                $in_array_args                      = $args[4] ?? "-";
+                if (is_array($in_array_args) &&
+                    $in_array_file === $file &&
+                    $in_array_line === $line
+                ) {
+                    $args                           = $in_array_args;
+                }
+            }
+            if (count($args)) {
+                $message["args"]                    = $args;
+            }
         }
         return $message;
     }
 
     /**
      * @param Throwable $exception
-     * @param Throwable|null $parent
-     * @return void
+     * @param int $tLevel
+     * @return array
      */
-    private function convertException(Throwable $exception, Throwable $parent=null) : void {
-        $trace                                      = $exception->getTrace();
-        for ($iTrace = 0; $iTrace < count($trace); $iTrace=$iTrace+2) {
-            $message                                = $this->getTraceMessage($trace, $iTrace);
-            if ($iTrace === 0) {
-                $message                            = array_merge(["message" => $exception->getMessage()], $message);
+    private function getFirstMessage(Throwable $exception, int $tLevel) : array {
+        return [
+            "message"                           => $exception->getMessage(),
+            "class"                             => get_class($exception),
+            "file"                              => $exception->getFile(),
+            "line"                              => $exception->getLine(),
+            "tLevel"                            => $tLevel,
+        ];
+    }
+
+    /**
+     * @param Throwable $exception
+     * @param int $tLevel
+     * @param array|null $parentMessage
+     * @return array
+     */
+    private function convertTrace(Throwable $exception, int $tLevel, array $parentMessage=null) : array {
+        $traces                                     = $exception->getTrace();
+        $messages                                   = [];
+        for ($iTrace=0; $iTrace < count($traces); $iTrace++) {
+            $message                                = $this->getTraceMessage($traces, $iTrace, $tLevel);
+            if ($parentMessage &&
+                $parentMessage["file"] === $message["file"] &&
+                $parentMessage["line"] === $message["line"]
+            ) {
+                break;
             }
-            if (!$this->pushMessage($message)) break;
-            if ($previous = $exception->getPrevious()) {
-                $this->convertException($previous, $exception);
-                $pTrace                             = $previous->getTrace();
-                $message = [
-                    "message"                       => $previous->getMessage(),
-                    "line"                          => $previous->getLine(),
-                    "function"                      => $pTrace[0]["function"] ?? "-",
-                    "class"                         => $pTrace[0]["class"] ?? "-",
-                ];
-                if ($this->traceMessageArgs && array_key_exists("args", $pTrace[0])) {
-                    $message["args"]                = $pTrace[0]["args"];
+            if ($this->traceMessageMax && $this->cTraceMessage == $this->traceMessageMax) break;
+            $messages[]                             = $message;
+            $this->cTraceMessage++;
+            if ($iTrace === 0 && $previous = $exception->getPrevious()) {
+                $tLevel++;
+                $pMessages                          = $this->convertTrace($previous, $tLevel, $message);
+                if (count($pMessages)) {
+                    arsort($pMessages);
+                    $messages                       = array_merge($messages, $pMessages);
                 }
-                if (!$this->pushMessage($message)) break;
-                return;
+                break;
             }
-            if ($parent) return;
         }
+        return $messages;
+    }
+
+    private function getExceptionMessages(Throwable $exception, int $tLevel) : array {
+        $messages                                   = [];
+        $messages[]                                 = $this->getFirstMessage($exception, $tLevel);
+        while ($previous = $exception->getPrevious()) {
+            $messages[]                             = $this->getFirstMessage($previous, ++$tLevel);
+            $exception                              = $previous;
+        }
+        return $messages;
     }
 
     /**
@@ -94,7 +126,9 @@ class RecordTokenValueException implements IRecordTokenValueConverter {
      * @return array
      */
     public function getValue($value) {
-        $this->convertException($value);
-        return $this->traceMessage;
+        return [
+            "message"                               => $this->getExceptionMessages($value, 1),
+            "trace"                                 => $this->convertTrace($value, 1),
+        ];
     }
 }
