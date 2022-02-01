@@ -6,5 +6,5 @@ interface IRecordTokenReader {
      * @param string $findKey
      * @return mixed|null
      */
-    public function getValue(array $token, string $findKey);
+    public function getValue(array &$token, string $findKey);
 }
