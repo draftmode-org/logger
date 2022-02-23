@@ -31,6 +31,7 @@
       <directory>./tests/Handler</directory>
       <directory>./tests/Utility</directory>
       <directory>./tests/Writer</directory>
+      <directory>./tests/_Examples</directory>
     </testsuite>
     <testsuite name="Common">
       <directory>./tests/Common</directory>

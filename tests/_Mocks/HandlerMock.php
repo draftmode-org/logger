@@ -2,6 +2,7 @@
 namespace Terrazza\Component\Logger\Tests\_Mocks;
 
 use Terrazza\Component\Logger\Channel;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
 use Terrazza\Component\Logger\IChannelHandler;
 use Terrazza\Component\Logger\IChannel;
@@ -9,10 +10,6 @@ use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
-use Terrazza\Component\Logger\IRecordTokenReader;
-use Terrazza\Component\Logger\Normalizer\NormalizeFlat;
-use Terrazza\Component\Logger\RecordToken\RecordTokenReader;
-use Terrazza\Component\Logger\RecordToken\RecordTokenValueDate;
 use Terrazza\Component\Logger\Writer\StreamFile;
 
 class HandlerMock {
@@ -26,16 +23,12 @@ class HandlerMock {
     public static function getContent() : string {
         return trim(file_get_contents(self::stream));
     }
-    public static function getTokenReader(string $dateFormat) : IRecordTokenReader {
-        return new RecordTokenReader(["Date" => new RecordTokenValueDate($dateFormat)]);
-    }
 
     public static function getChannel(string $dateFormat) : IChannel {
         return new Channel(
             "channel",
-            new StreamFile(self::stream),
-            //new ArrayFormatter(self::getTokenReader($dateFormat), new NormalizeFlat("|"))
-            new ArrayFormatter(new RecordTokenReader, new NormalizeFlat("|"))
+            new StreamFile(new FormattedRecordConverterMock(), self::stream),
+            new ArrayFormatter(new NonScalarJsonEncode(), [])
         );
     }
 
