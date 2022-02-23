@@ -1,6 +1,7 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Formatter;
 use PHPUnit\Framework\TestCase;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
 use Terrazza\Component\Logger\Formatter\ArrayFormatter;
 use Terrazza\Component\Logger\Formatter\FormatterException;
 use Terrazza\Component\Logger\Logger;
@@ -19,63 +20,79 @@ class ArrayFormatterTest extends TestCase {
         );
     }
 
-    function xtestFormatException() {
-        $normalizer = new NormalizeFlat("|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer);
-        $this->expectException(FormatterException::class);
-        $formatter->withFormat("test");
+    function testNoFormat() {
+        $nonScalar  = new NonScalarJsonEncode();
+        $formatter  = new ArrayFormatter($nonScalar, []);
+        $this->assertEquals([], $formatter->formatRecord($this->getRecord()));
     }
 
-    function xtestNoFormat() {
-        $normalizer = new NormalizeFlat("|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer);
-        $this->assertEquals("", $formatter->formatRecord($this->getRecord()));
+    function testMethodWithFormat() {
+        $nonScalar  = new NonScalarJsonEncode();
+        $record     = $this->getRecord();
+        $formatter  = (new ArrayFormatter($nonScalar, []))->withFormat(["LoggerName", "Level"]);
+        $this->assertEquals(
+            ["LoggerName" => $record->getLoggerName(), "Level" => $record->getLogLevel()],
+            $formatter->formatRecord($record)
+        );
     }
 
-    function xtestMethodWithFormat() {
-        $normalizer = new NormalizeFlat($delimiter = "|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = (new ArrayFormatter($tokenReader, $normalizer))->withFormat(["LoggerName", "Level"]);
-        $this->assertEquals(join($delimiter, ["loggerName", Logger::DEBUG]), $formatter->formatRecord($this->getRecord()));
+    function testWithFormat() {
+        $nonScalar  = new NonScalarJsonEncode();
+        $record     = $this->getRecord();
+        $formatter  = new ArrayFormatter($nonScalar, ["LoggerName", "Level"]);
+        $this->assertEquals(
+            ["LoggerName" => $record->getLoggerName(), "Level" => $record->getLogLevel()],
+            $formatter->formatRecord($record)
+        );
     }
 
-    function xtestWithoutFormat() {
-        $normalizer = new NormalizeFlat($delimiter = "|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer, ["LoggerName", "Level"]);
-        $this->assertEquals(join($delimiter, ["loggerName", Logger::DEBUG]), $formatter->formatRecord($this->getRecord()));
-    }
-
-    function xtestWithFormat() {
-        $normalizer = new NormalizeFlat($delimiter = "|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer,["LoggerName" =>"ln:{LoggerName}", "Level"]);
-        $this->assertEquals(join($delimiter, ["ln:loggerName", Logger::DEBUG]), $formatter->formatRecord($this->getRecord()));
-    }
-
-    function xtestWithConcatFormat() {
-        $normalizer = new NormalizeFlat("|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer, ["LoggerName" =>"ln:{LoggerName}:l:{Level}"]);
-        $this->assertEquals("ln:loggerName:l:".Logger::DEBUG, $formatter->formatRecord($this->getRecord()));
+    function testWithConcatFormat() {
+        $nonScalar  = new NonScalarJsonEncode();
+        $record     = $this->getRecord();
+        $formatter  = new ArrayFormatter($nonScalar, ["LoggerName" =>"ln:{LoggerName}:l:{Level}"]);
+        $this->assertEquals(
+            ["LoggerName" => "ln:loggerName:l:".Logger::DEBUG],
+            $formatter->formatRecord($record)
+        );
     }
 
     function testWithContext() {
-        $normalizer = new NormalizeFlat("|");
-        $tokenReader= new RecordTokenReader();
-        $formatter  = new ArrayFormatter($tokenReader, $normalizer, ["2nd" => "{Context.key2}-{Context.key3}", "Context", "key1" =>"{Context.key1}"]);
+        $nonScalar  = new NonScalarJsonEncode();
+        $formatter  = new ArrayFormatter($nonScalar, ["Message" => "{Context.key2}-{Context.key3}-{Context.key7}", "Context", "key1" =>"{Context.key1}"]);
         $record     = Record::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
             __NAMESPACE__,
             __METHOD__,
-            ['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3', 'key4' => 'value4']
+            ['key1' => $value1 = 'value1', 'key2' => $value2= 'value2', 'key3' => $value3 = 'value3', $key4 = 'key4' => $value4 = 'value4']
         );
-        $response   = $formatter->formatRecord($record);
-        print_r(PHP_EOL.$response);
-        $this->assertTrue(true);
+        $this->assertEquals(
+            [
+                "Message" => "$value2-$value3-", // {Context.key7} does not exists
+                "Context" => [$key4 => $value4],
+                "key1" => $value1
+            ],
+            $formatter->formatRecord($record)
+        );
+    }
+
+    function testWithContextDefault() {
+        $nonScalar  = new NonScalarJsonEncode();
+        $formatter  = new ArrayFormatter($nonScalar, ["Message" => "{Context.key1}-{Context.key2?default}"]);
+        $record     = Record::createRecord(
+            "loggerName",
+            Logger::DEBUG,
+            "logMessage",
+            __NAMESPACE__,
+            __METHOD__,
+            ['key1' => $value1 = 'value1']
+        );
+        $this->assertEquals(
+            [
+                "Message" => "$value1-default",
+            ],
+            $formatter->formatRecord($record)
+        );
     }
 }

@@ -3,5 +3,5 @@
 namespace Terrazza\Component\Logger;
 
 interface IWriter {
-    public function write(string $record) : void;
+    public function write(array $record) : void;
 }

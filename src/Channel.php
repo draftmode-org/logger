@@ -5,8 +5,8 @@ namespace Terrazza\Component\Logger;
 class Channel implements IChannel {
     private string $name;
     private IWriter $writer;
-    private IFormatter $formatter;
-    public function __construct(string $name, IWriter $writer, IFormatter $formatter) {
+    private IRecordFormatter $formatter;
+    public function __construct(string $name, IWriter $writer, IRecordFormatter $formatter) {
         $this->name 								= $name;
         $this->writer 								= $writer;
         $this->formatter 							= $formatter;
@@ -20,9 +20,9 @@ class Channel implements IChannel {
     }
 
     /**
-     * @return IFormatter
+     * @return IRecordFormatter
      */
-    public function getFormatter() : IFormatter {
+    public function getFormatter() : IRecordFormatter {
         return $this->formatter;
     }
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace Terrazza\Component\Logger\Utility\RecordToken;
-use Terrazza\Component\Logger\IRecordTokenValueConverter;
+namespace Terrazza\Component\Logger\Utility\RecordValueConverter;
+use Terrazza\Component\Logger\IRecordValueConverter;
 use Throwable;
 
-class RecordTokenValueException implements IRecordTokenValueConverter {
+class RecordValueException implements IRecordValueConverter {
     private int $traceMessageMax;
     private bool $traceMessageArgs;
     private int $cTraceMessage                      = 0;

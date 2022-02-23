@@ -5,9 +5,9 @@ interface IChannel {
     public function getName() : string;
 
     /**
-     * @return IFormatter
+     * @return IRecordFormatter
      */
-    public function getFormatter() : IFormatter;
+    public function getFormatter() : IRecordFormatter;
 
     /**
      * @return IWriter

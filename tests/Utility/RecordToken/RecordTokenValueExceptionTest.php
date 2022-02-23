@@ -5,12 +5,12 @@ use RuntimeException;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockMain;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockParent1;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterExceptionMockParent2;
-use Terrazza\Component\Logger\Utility\RecordToken\RecordTokenValueException;
+use Terrazza\Component\Logger\Utility\RecordValueConverter\RecordValueException;
 
 class RecordTokenValueExceptionTest extends TestCase {
 
     function testGetOneLevelNoArgs() {
-        $reader     = new RecordTokenValueException(1, false);
+        $reader     = new RecordValueException(1, false);
         $exception  = new RuntimeException($message = "my");
         $value      = $reader->getValue($exception);
         $this->assertEquals(
@@ -35,7 +35,7 @@ class RecordTokenValueExceptionTest extends TestCase {
             $parent1Class->getExceptionWith1Parent(12);
         } catch (\Throwable $exception) {}
         $traceCount     = 3;
-        $reader         = new RecordTokenValueException($traceCount, false);
+        $reader         = new RecordValueException($traceCount, false);
         $traces         = $reader->getValue($exception);
         $trace          = $traces["trace"];
         $this->assertEquals([
@@ -60,7 +60,7 @@ class RecordTokenValueExceptionTest extends TestCase {
             $parent2Class->getExceptionWith2Parent($arg = 12);
         } catch (\Throwable $exception) {}
         $traceCount     = 4;
-        $reader         = new RecordTokenValueException($traceCount, true);
+        $reader         = new RecordValueException($traceCount, true);
         $traces         = $reader->getValue($exception);
         $trace          = $traces["trace"];
         $this->assertEquals([
@@ -98,7 +98,7 @@ class RecordTokenValueExceptionTest extends TestCase {
             $response       = $parent1Class->createException($arg = 12);
         } catch (\Throwable $exception) {
             $traceCount     = 2;
-            $reader         = new RecordTokenValueException($traceCount, true);
+            $reader         = new RecordValueException($traceCount, true);
             $traces         = $reader->getValue($exception);
             var_dump($traces);
             var_dump($exception->getTrace());

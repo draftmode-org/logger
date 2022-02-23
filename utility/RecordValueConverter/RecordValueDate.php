@@ -1,10 +1,10 @@
 <?php
 
-namespace Terrazza\Component\Logger\Utility\RecordToken;
+namespace Terrazza\Component\Logger\Utility\RecordValueConverter;
 use DateTime;
-use Terrazza\Component\Logger\IRecordTokenValueConverter;
+use Terrazza\Component\Logger\IRecordValueConverter;
 
-class RecordTokenValueDate implements IRecordTokenValueConverter {
+class RecordValueDate implements IRecordValueConverter {
     private string $dateFormat;
 
     public function __construct(string $dateFormat="Y-m-d H:i:s.u") {

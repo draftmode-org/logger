@@ -2,7 +2,7 @@
 
 namespace Terrazza\Component\Logger;
 
-interface IRecordTokenValueConverter {
+interface IRecordValueConverter {
     /**
      * @param mixed $value
      * @return mixed|null

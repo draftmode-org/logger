@@ -13,7 +13,7 @@ use Terrazza\Component\Logger\IRecordTokenReader;
 use Terrazza\Component\Logger\Normalizer\NormalizeFlat;
 use Terrazza\Component\Logger\RecordToken\RecordTokenReader;
 use Terrazza\Component\Logger\RecordToken\RecordTokenValueDate;
-use Terrazza\Component\Logger\Writer\StreamWriter;
+use Terrazza\Component\Logger\Writer\StreamFile;
 
 class HandlerMock {
     CONST stream="tests/Writer/stream.txt";
@@ -33,7 +33,7 @@ class HandlerMock {
     public static function getChannel(string $dateFormat) : IChannel {
         return new Channel(
             "channel",
-            new StreamWriter(self::stream),
+            new StreamFile(self::stream),
             //new ArrayFormatter(self::getTokenReader($dateFormat), new NormalizeFlat("|"))
             new ArrayFormatter(new RecordTokenReader, new NormalizeFlat("|"))
         );

@@ -2,16 +2,16 @@
 namespace Terrazza\Component\Logger\Handler;
 
 use Terrazza\Component\Logger\IChannel;
-use Terrazza\Component\Logger\IFormatter;
 use Terrazza\Component\Logger\IHandler;
+use Terrazza\Component\Logger\IRecordFormatter;
 use Terrazza\Component\Logger\Record;
 use Terrazza\Component\Logger\IWriter;
 
 class SingleHandler implements IHandler {
     private HandlerPattern $pattern;
     private IWriter $writer;
-    private IFormatter $formatter;
-    public function __construct(HandlerPattern $pattern, IChannel $channel, $format) {
+    private IRecordFormatter $formatter;
+    public function __construct(HandlerPattern $pattern, IChannel $channel, array $format) {
         $this->pattern 							    = $pattern;
         $this->writer                               = $channel->getWriter();
         $this->formatter 							= $channel->getFormatter()->withFormat($format);

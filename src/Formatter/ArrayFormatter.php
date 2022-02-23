@@ -1,78 +1,156 @@
 <?php
 namespace Terrazza\Component\Logger\Formatter;
 
-use Terrazza\Component\Logger\IFormatter;
-use Terrazza\Component\Logger\IRecordTokenReader;
+use Terrazza\Component\Logger\Converter\INonScalarConverter;
+use Terrazza\Component\Logger\IRecordFormatter;
+use Terrazza\Component\Logger\IRecordValueConverter;
 use Terrazza\Component\Logger\Record;
-use Terrazza\Component\Logger\INormalizer;
 
-class ArrayFormatter implements IFormatter {
+class ArrayFormatter implements IRecordFormatter {
+    private INonScalarConverter $nonScalarConverter;
     private array $format;
-    private IRecordTokenReader $recordTokenReader;
-    private INormalizer $normalizer;
+    private array $valueConverter=[];
 
-    public function __construct(IRecordTokenReader $recordTokenReader, INormalizer $normalizer, array $format=null) {
-        $this->recordTokenReader 					= $recordTokenReader;
-        $this->normalizer 							= $normalizer;
-        $this->format                               = $format ?? [];
+    public function __construct(INonScalarConverter $nonScalarConverter, array $format=null) {
+        $this->nonScalarConverter 					= $nonScalarConverter;
+        $this->format 								= $format;
     }
 
     /**
      * @param array $format
-     * @return IFormatter
+     * @return IRecordFormatter
      */
-    public function withFormat($format) : IFormatter {
-        if (!is_array($format)) {
-            throw new FormatterException("format type expected array, given ".gettype($format));
-        }
+    public function withFormat(array $format) : IRecordFormatter {
         $formatter                                  = clone $this;
         $formatter->format                          = $format;
         return $formatter;
     }
 
-    private function _formatRecord(array &$response, array &$token, array $format) {
-        foreach ($format as $responseKey => $responseFormat) {
-            if (is_numeric($responseKey)) {
-                $tokenKeys                          = explode("?", $responseFormat);
-                $tokenKey                           = array_shift($tokenKeys);
-                $tokenDefault                       = array_shift($tokenKeys);
-                if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
-                    $response[$tokenKey]		    = $this->normalizer->convertTokenValue($tokenKey, $tokenValue);
-                } elseif ($tokenDefault) {
-                    $response[$tokenKey]            = $tokenDefault;
-                }
-            } else {
-                $hasTokenValue                      = false;
-                $tokenValue                         = preg_replace_callback("/{(.*?)}/", function ($matches) use (&$token, &$hasTokenValue) {
-                    $tokenKeys                      = explode("?", $matches[1]);
-                    $tokenKey                       = array_shift($tokenKeys);
-                    $tokenDefault                   = array_shift($tokenKeys);
-                    if ($tokenValue = $this->recordTokenReader->getValue($token, $tokenKey)) {
-                        if ($normalized = $this->normalizer->convertTokenValue($tokenKey, $tokenValue)) {
-                            $hasTokenValue          = true;
-                            return $normalized;
-                        }
-                    } elseif ($tokenDefault) {
-                        $hasTokenValue              = true;
-                        return $tokenDefault;
-                    }
-                    return $matches[1];
-                }, $responseFormat);
-                if ($hasTokenValue) {
-                    $response[$responseKey]         = $tokenValue;
-                }
-            }
-        }
+    /**
+     * @param string $tokenKey
+     * @param IRecordValueConverter $valueConverter
+     */
+    public function pushConverter(string $tokenKey, IRecordValueConverter $valueConverter) : void {
+        $this->valueConverter[$tokenKey]            = $valueConverter;
     }
 
     /**
      * @param Record $record
-     * @return string
+     * @return array
      */
-    public function formatRecord(Record $record) : string {
+    public function formatRecord(Record $record) : array {
         $token										= $record->getToken();
-        $response                                   = [];
-        $this->_formatRecord($response, $token, $this->format);
-        return $this->normalizer->convertLine($response);
+        return $this->formatTokens($token);
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return mixed
+     */
+    private function convertValue(string $key, $value) {
+        if ($converter = $this->valueConverter[$key] ?? null) {
+            return $converter->getValue($value);
+        } else {
+            return $value;
+        }
+    }
+
+    /**
+     * @param array $tokens
+     * @return array
+     */
+    private function formatTokens(array $tokens) : array {
+        $rows 										= [];
+        $nonScalars									= [];
+        //
+        // extract context for tokens
+        //
+        $context 									= $tokens["Context"];
+        unset($tokens["Context"]);
+
+        //
+        foreach ($this->format as $fKey => $sText) {
+            if (is_numeric($fKey)) {
+                $fKey                               = $sText;
+                $sText                              = "{" . $sText . "}";
+            }
+            $nonScalar								= null;
+            $rows[$fKey] 							= preg_replace_callback("/{(.*?)}/", function ($match) use ($tokens, &$context, &$nonScalar, $sText) {
+                $fText 								= $match[0];
+                $tKey 								= $match[1];
+                if ($tKey == "Context") {
+                    return $fText;
+                }
+                if (strpos($tKey, "Context.") === 0) {
+                    $cKeys							= explode(".", $tKey);
+                    $dataKey						= array_pop($cKeys);
+                    $data							= &$context;
+                } else {
+                    $data							= $tokens;
+                    $dataKey 						= $tKey;
+                }
+                if (array_key_exists($dataKey, $data)) {
+                    $value 							= $this->convertValue($tKey, $data[$dataKey]);
+                    unset($data[$dataKey]);
+
+                    if ($fText === $sText) {
+                        $nonScalar				    = $value;
+                    }
+
+                    if (is_scalar($value) || is_null($value)) {
+                        return $value;
+                    } else {
+                        return $this->nonScalarConverter->getValue($tKey, $value);
+                    }
+                }
+                return $fText;
+            }, $sText);
+            if ($nonScalar) {
+                $nonScalars[$fKey]					= $nonScalar;
+            }
+        }
+
+        $rows 										= array_filter($rows);
+        //
+        // replace key with defaults
+        //
+        $rows 										= preg_replace_callback("/{(.*?)\?(.*?)}/", function ($match) {
+            return $match[2];
+        }, $rows);
+        //
+        // handle context
+        //
+        if (count($context)) foreach ($rows as $fKey => $sText) {
+            $nonScalar								= null;
+            $rows[$fKey] 							= preg_replace_callback("/{Context}/", function ($match) use ($context, &$nonScalar, $sText) {
+                $tKey 								= $match[0];
+                if ($tKey === $sText) {
+                    $nonScalar						= $context;
+                    return "-nonScalar-";
+                } else {
+                    return $this->nonScalarConverter->getValue($tKey, $context);
+                }
+            }, $sText);
+            if ($nonScalar) {
+                $nonScalars[$fKey]					= $nonScalar;
+            }
+        }
+        //
+        // remove not found keys
+        //
+        $rows 										= preg_replace_callback("/{.*?}/", function ($match) {
+            return "";
+        }, $rows);
+        $rows 										= array_filter($rows);
+        //
+        // replace nonScalars
+        //
+        foreach ($nonScalars as $fKey => $fValue) {
+            if (array_key_exists($fKey, $rows)) {
+                $rows[$fKey] 						= $fValue;
+            }
+        }
+        return $rows;
     }
 }

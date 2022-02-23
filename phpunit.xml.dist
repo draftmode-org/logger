@@ -26,26 +26,21 @@
     <testsuite name="Common">
       <directory>./tests/Common</directory>
     </testsuite>
+    <testsuite name="Writer">
+      <directory>./tests/Writer</directory>
+    </testsuite>
+    <testsuite name="Utility">
+      <directory>./tests/Utility</directory>
+    </testsuite>
+
     <testsuite name="Formatter">
       <directory>./tests/Formatter</directory>
     </testsuite>
     <testsuite name="Handler">
       <directory>./tests/Handler</directory>
     </testsuite>
-    <testsuite name="Normalizer">
-      <directory>./tests/Normalizer</directory>
-    </testsuite>
-    <testsuite name="Writer">
-      <directory>./tests/Writer</directory>
-    </testsuite>
-    <testsuite name="RecordToken">
-      <directory>./tests/RecordToken</directory>
-    </testsuite>
     <testsuite name="Examples">
       <directory>./tests/_Examples</directory>
-    </testsuite>
-    <testsuite name="Utility">
-      <directory>./tests/Utility</directory>
     </testsuite>
   </testsuites>
 </phpunit>

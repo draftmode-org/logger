@@ -19,7 +19,7 @@ class LoggerTest extends TestCase {
                 new WriterMock(),
                 new FormatterMock()
             ),
-            ""
+            []
         );
     }
 
