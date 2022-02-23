@@ -7,7 +7,7 @@ use Terrazza\Component\Logger\Handler\HandlerPattern;
 interface IChannelHandler {
     /**
      * @param HandlerPattern $pattern
-     * @param mixed $format
+     * @param array $format
      */
-    public function pushHandler(HandlerPattern $pattern, $format) : void;
+    public function pushHandler(HandlerPattern $pattern, array $format) : void;
 }

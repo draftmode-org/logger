@@ -62,6 +62,13 @@ class Logger implements ILogger {
     }
 
     /**
+     * @return string|null
+     */
+    public function getNamespace() : ?string {
+        return $this->namespace;
+    }
+
+    /**
      * @param string $method
      * @return ILogger
      */
@@ -69,6 +76,13 @@ class Logger implements ILogger {
         $logger                                     = clone $this;
         $logger->method                             = $method;
         return $logger;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getMethod() : ?string {
+        return $this->method;
     }
 
     /**

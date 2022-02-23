@@ -13,7 +13,7 @@ class ChannelHandlerTest extends TestCase {
     function test() {
         $channel        = new Channel("channel", new WriterMock(), new FormatterMock());
         $handler        = new ChannelHandler($channel);
-        $handler->pushHandler(new HandlerPattern(Logger::WARNING), "");
+        $handler->pushHandler(new HandlerPattern(Logger::WARNING), []);
         $emptyHandler   = new ChannelHandler($channel);
         $this->assertEquals([
             false,

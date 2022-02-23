@@ -16,10 +16,20 @@ interface ILogger extends LoggerInterface {
     public function withNamespace(string $namespace) : ILogger;
 
     /**
+     * @return string|null
+     */
+    public function getNamespace() : ?string;
+
+    /**
      * @param string $method
      * @return ILogger
      */
     public function withMethod(string $method) : ILogger;
+
+    /**
+     * @return string|null
+     */
+    public function getMethod() : ?string;
 
     /**
      * @param string $key

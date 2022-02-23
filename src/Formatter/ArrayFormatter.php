@@ -10,6 +10,8 @@ class ArrayFormatter implements IRecordFormatter {
     private INonScalarConverter $nonScalarConverter;
     private array $format;
     private array $valueConverter=[];
+    private CONST typeSafe = "t-y-p-e-s-a-v-e";
+    private CONST defaultChar = "?";
 
     public function __construct(INonScalarConverter $nonScalarConverter, array $format=null) {
         $this->nonScalarConverter 					= $nonScalarConverter;
@@ -96,38 +98,35 @@ class ArrayFormatter implements IRecordFormatter {
 
                     if ($fText === $sText) {
                         $nonScalar				    = $value;
+                        return self::typeSafe;
                     }
 
-                    if (is_scalar($value) || is_null($value)) {
-                        return $value;
-                    } else {
-                        return $this->nonScalarConverter->getValue($tKey, $value);
+                    if (!is_scalar($value) && !is_null($value)) {
+                        $value                      = $this->nonScalarConverter->getValue($tKey, $value);
                     }
+                    return $value;
+                } elseif (strpos($dataKey, self::defaultChar)) {
+                    list(,$value)                   = explode(self::defaultChar, $dataKey);
+                    return $value;
                 }
-                return $fText;
+                return "";
             }, $sText);
             if ($nonScalar) {
                 $nonScalars[$fKey]					= $nonScalar;
             }
         }
-
         $rows 										= array_filter($rows);
-        //
-        // replace key with defaults
-        //
-        $rows 										= preg_replace_callback("/{(.*?)\?(.*?)}/", function ($match) {
-            return $match[2];
-        }, $rows);
         //
         // handle context
         //
         if (count($context)) foreach ($rows as $fKey => $sText) {
             $nonScalar								= null;
             $rows[$fKey] 							= preg_replace_callback("/{Context}/", function ($match) use ($context, &$nonScalar, $sText) {
-                $tKey 								= $match[0];
-                if ($tKey === $sText) {
+                $fText 								= $match[0];
+                $tKey 								= strtr($fText, ["{" => "", "}" => ""]);
+                if ($fText === $sText) {
                     $nonScalar						= $context;
-                    return "-nonScalar-";
+                    return self::typeSafe;
                 } else {
                     return $this->nonScalarConverter->getValue($tKey, $context);
                 }
@@ -136,12 +135,6 @@ class ArrayFormatter implements IRecordFormatter {
                 $nonScalars[$fKey]					= $nonScalar;
             }
         }
-        //
-        // remove not found keys
-        //
-        $rows 										= preg_replace_callback("/{.*?}/", function ($match) {
-            return "";
-        }, $rows);
         $rows 										= array_filter($rows);
         //
         // replace nonScalars

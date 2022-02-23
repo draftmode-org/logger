@@ -15,7 +15,7 @@ class SingleHandlerTest extends TestCase {
         $formatter  = new FormatterMock();
         $channel    = new Channel("channel", $writer, $formatter);
         $pattern    = new HandlerPattern(Logger::WARNING);
-        $handler    = new SingleHandler($pattern, $channel, "");
+        $handler    = new SingleHandler($pattern, $channel, []);
         $this->assertEquals([
             true,
             false,

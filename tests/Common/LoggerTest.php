@@ -43,18 +43,36 @@ class LoggerTest extends TestCase {
         $this->assertTrue(true);
     }
 
-    function testContextKey() {
-        $logger = new Logger("loggerName", [$mKey = "mKey" => $mValue = "mValue"]);
+    function testHandlerNoHandlerWrite() {
+        $logger = (new Logger("loggerName"))->withHandler($this->getEmptyHandler(Logger::ERROR));
+        $logger->error("message");
+        $this->assertTrue(true);
+    }
+
+    function testGetters() {
+        $logger     = new Logger("loggerName", [$mKey = "mKey" => $mValue = "mValue"]);
+        $logger2    = $logger->withMethod(__METHOD__);
+        $logger2    = $logger2->withNamespace(__NAMESPACE__);
         $this->assertEquals([
             true,
             $mValue,
             false,
-            null
+            null,
+            null,
+            null,
+
+            __METHOD__,
+            __NAMESPACE__,
         ],[
             $logger->hasContextKey($mKey),
             $logger->getContextByKey($mKey),
             $logger->hasContextKey("unknown"),
             $logger->getContextByKey("unknown"),
+            $logger->getMethod(),
+            $logger->getNamespace(),
+
+            $logger2->getMethod(),
+            $logger2->getNamespace(),
         ]);
     }
 }

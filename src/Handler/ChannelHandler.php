@@ -17,9 +17,9 @@ class ChannelHandler implements IHandler, IChannelHandler {
 
     /**
      * @param HandlerPattern $pattern
-     * @param $format
+     * @param array $format
      */
-    public function pushHandler(HandlerPattern $pattern, $format) : void {
+    public function pushHandler(HandlerPattern $pattern, array $format) : void {
         $hashKey                                    = $pattern->getLogLevel();
         $this->handler[$hashKey]                    = new SingleHandler($pattern, $this->channel, $format);
         krsort($this->handler);
