@@ -6,8 +6,7 @@ use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
 use Terrazza\Component\Logger\IChannelHandler;
 use Terrazza\Component\Logger\IChannel;
-use Terrazza\Component\Logger\Formatter\ArrayFormatter;
-use Terrazza\Component\Logger\Handler\HandlerPattern;
+use Terrazza\Component\Logger\Formatter\RecordFormatter;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
 use Terrazza\Component\Logger\Writer\StreamFile;
@@ -24,11 +23,11 @@ class HandlerMock {
         return trim(file_get_contents(self::stream));
     }
 
-    public static function getChannel(string $dateFormat) : IChannel {
+    public static function getChannel() : IChannel {
         return new Channel(
             "channel",
             new StreamFile(new FormattedRecordConverterMock(), self::stream),
-            new ArrayFormatter(new NonScalarJsonEncode(), [])
+            new RecordFormatter(new NonScalarJsonEncode(), [])
         );
     }
 
@@ -36,10 +35,10 @@ class HandlerMock {
         return new ChannelHandler(self::getChannel($dateFormat));
     }
 
-    public static function getSingleHandler(HandlerPattern $pattern, array $format, string $dateFormat="Y-m-d") : IHandler {
+    public static function getSingleHandler(int $logLevel, array $format) : IHandler {
         return new SingleHandler(
-            $pattern,
-            self::getChannel($dateFormat),
+            $logLevel,
+            self::getChannel(),
             $format
         );
     }

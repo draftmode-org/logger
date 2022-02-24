@@ -8,13 +8,13 @@ use Terrazza\Component\Logger\Record;
 use Terrazza\Component\Logger\IWriter;
 
 class SingleHandler implements IHandler {
-    private HandlerPattern $pattern;
+    private int $logLevel;
     private IWriter $writer;
     private IRecordFormatter $formatter;
-    public function __construct(HandlerPattern $pattern, IChannel $channel, array $format) {
-        $this->pattern 							    = $pattern;
+    public function __construct(int $logLevel, IChannel $channel, ?array $format=null) {
+        $this->logLevel 							= $logLevel;
         $this->writer                               = $channel->getWriter();
-        $this->formatter 							= $channel->getFormatter()->withFormat($format);
+        $this->formatter 							= $format ? $channel->getFormatter()->withFormat($format) : $channel->getFormatter();
     }
 
     /**
@@ -22,7 +22,7 @@ class SingleHandler implements IHandler {
      * @return bool
      */
     public function isHandling(Record $record) : bool {
-        return $record->getLogLevel() >= $this->pattern->getLogLevel();
+        return $record->getLogLevel() >= $this->logLevel;
     }
 
     /**

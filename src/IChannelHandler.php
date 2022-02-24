@@ -1,13 +1,10 @@
 <?php
-
 namespace Terrazza\Component\Logger;
-
-use Terrazza\Component\Logger\Handler\HandlerPattern;
 
 interface IChannelHandler {
     /**
-     * @param HandlerPattern $pattern
+     * @param int $logLevel
      * @param array $format
      */
-    public function pushHandler(HandlerPattern $pattern, array $format) : void;
+    public function pushHandler(int $logLevel, array $format) : void;
 }

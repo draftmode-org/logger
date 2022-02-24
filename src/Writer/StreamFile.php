@@ -10,7 +10,7 @@ class StreamFile implements IWriter {
 
     public function __construct(IFormattedRecordConverter $converter, string $filename, int $flags=0) {
         $this->filename 							= $filename;
-        $this->flags 								= $flags;
+        $this->flags					            = $flags;
         $this->converter 							= $converter;
     }
 

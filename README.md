@@ -10,16 +10,13 @@ This component is an implementation of PSR/Log standard with some extensions.
          1. method: hasContextKey
          2. method: getContextByKey
    2. [Record](#object-record)
-   3. [Channel](#object-channel)
    4. [Formatter](#object-formatter)
    5. Writer
-      1. [StreamWriter](object-writer-stream)
-      2. [HtmlWriter](#object-writer-html)
+      1. [StreamFile](#object-writer-stream-file)
    6. Handler
       1. [ChannelHandler](#object-channel-handler)
       2. [SingleHandler](#object-single-handler)
-      3. [HandlerPattern](#object-handler-pattern)
-   7. [Normalizer](#object-normalizer)
+   7. [Converter](#object-converter)
 3. [Install](#install)
 4. [Requirements](#require)
 5. [Examples](#examples)
@@ -32,10 +29,12 @@ The Logger object provides 3 more properties than the common PSR implementations
 - namespace
 - method
 - context
+
 <a id="object-logger-withhandler" name="object-logger-withhandler"></a>
 <a id="user-content-object-logger-withhandler" name="user-content-object-logger-withhandler"></a>
 #### method: withHandler
-fulfill the same as pushHandler, but is immutable
+fulfill the same as pushHandler, but as immutable
+
 <a id="object-logger-withnamespace" name="object-logger-withnamespace"></a>
 <a id="user-content-object-logger-withnamespace" name="user-content-object-logger-withnamespace"></a>
 #### method: withNamespace
@@ -44,12 +43,18 @@ the property itself is forwarded to the RECORD object and can be printed through
 - Namespace (full namespace)
 - sNamesace (with the basename of the given namespace)
 
+**method: getNamespace**<br>
+returns the optional set Namespace
+
 <i>example of usage</i><br>
 a class is injected with the component and inside the constructor<br>
 ```
-$this->logger = $logger->withNamespace(__NAMESPACE__);
+$logger = $logger->withNamespace(__NAMESPACE__);
+$logger->notice("message"); // the LogRecord provides Namespace attribute
+echo $logger->getNamespace(); // __NAMESPACE
 ```
 for all methods (error, waring, ...) the property is available in the Record and can be formatted.
+
 <a id="object-logger-withmethod" name="object-logger-withmethod"></a>
 <a id="user-content-object-logger-withmethod" name="user-content-object-logger-withmethod"></a>
 #### method: withMethod
@@ -58,14 +63,18 @@ the property itself is forwarded to the RECORD object and can be printed through
 - Method (full method)
 - sMethod (with the basename of the given method)
 
+**method: getMethod**<br>
+returns the optional set Method
+
 <i>example of usage</i><br>
 a class is injected with the component and inside the constructor<br>
 ```
 $logger = $logger->withMethod(__METHOD__);
-$logger->notice("hello");
+$logger->notice("hello"); // the LogRecord provides Method attribute
+echo $logger->getMethod(); // __METHOD__
 ```
-
 for all methods (error, waring, ...) the property is available in the Record and can be formatted.
+
 <a id="object-logger-context" name="object-logger-context"></a>
 <a id="user-content-object-logger-context" name="user-content-object-logger-context"></a>
 #### context
@@ -99,7 +108,6 @@ $logger->hasContextKey("email"); // false
 $logger->hasContextKey("user.name"); // true
 $logger->hasContextKey("user.email"); // false
 ```
-
 ##### method: getContextValue
 returns the initialized context value by a given key.<br>
 with a DOT inside the key you can walk through the array.<br>
@@ -110,6 +118,7 @@ $logger->getContextByKey("email"); // null
 $logger->getContextByKey("user.name"); // Max
 $logger->getContextByKey("user.email"); // null
 ```
+
 <a id="object-record" name="object-record"></a>
 <a id="user-content-object-record" name="user-content-object-record"></a>
 ### Record
@@ -127,14 +136,16 @@ LogRecord properties:
 - MemAllocated (int)
 - Message (string)
 - Context (array) 
+
 #### method/static createRecord
 this method is used inside <i>Logger</i> to create a new LogRecord object.
-#### method: getToken(string $dateFormat)
+
+#### method: getToken()
 this method is used in the <i>Formatter</i> to get the record "encoded".
 Every element can be accessed through the "format" e.g. {Level}{LevelName}{Context.name}
 ```
 return [
-  'Date'         => $this->getLogDate()->format($dateFormat),
+  'Date'         => $this->getLogDate(),
   'Level'        => $this->getLogLevel(),
   'LevelName'    => $this->getLogLevelName(),
   'LoggerName'   => $this->getLoggerName(),
@@ -148,37 +159,62 @@ return [
   'Context'      => $this->getContext(),
 ]
 ```
-<a id="object-channel" name="object-channel"></a>
-<a id="user-content-object-channel" name="user-content-object-channel"></a>
-### Channel
-The channel covers the infrastructure (Writer) and formatting type (Formatter).
 
 <a id="object-formatter" name="object-formatter"></a>
 <a id="user-content-object-formatter" name="user-content-object-formatter"></a>
-### Formatter
-A formatter converts a record to a string by using<br>
-- RecordTokenReader
-- [Normalizer](#object-normlizer)
-- $format (array)
+### RecordFormatter
+The RecordFormatter converts/maps a record to an array<br>
+- NonScalarConverter
+- format (array)
 <br>
 ``["Date", "Message"]``
-#### RecordTokenReader
-The RecordTokenReader tries to find a key (e.g. ``Date``) in an array (_record 2 array_).<br>
-The RecordTokenReader itself can be extended with 0..n valueConverter.<br>
+
+#### NonScalarConverter (INonScalarConverter)
+The NonScalarConverter convert a nonScalar value (e.g. from Context) into a string.<br>
+Actually the provided class _NonScalarJsonEncode_ use json_encode and prefix it with the attribute name.<br>
+<br>
+The NonScalarConverter is used, when a formatter-line includes a nonScalar and a scalar content.<br>
+
+_example of usage_:<br>
+```
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
+
+$record = ["message" => "myMessage", "key" => ["value1", "value2"]];
+echo (new NonScalarJsonEncode())->getValue($context["key"]); // key:{"value1", "value2"}
+
+// in context of the formatter it will be
+$format = ["{Message}:{Context.key}"];                 // ... myMessage:key:{"value1", "value2"}
+$format = ["Context" => "{Message}:{Context.key}"];    // ... myMessage:key:{"value1", "value2"}
+```
+
 A ValueConverter (IRecordTokenValueConverter) will be used to convert a value based on a key.
 #### method: withFormat
-...
+Returns a new instance of the formatter but with a different format.<br>
+<br>
+_example of usage_:<br>
+```
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
+use Terrazza\Component\Logger\Formatter\RecordFormatter;
+
+$nonScalar = new NonScalarJsonEncode();
+$formatter = new RecordFormatter($nonScalar, ["Message" => "{Message}"];
+$nformatter = $formatter->withFormat(["Message" => "{Message}:{Date}"]);
+```
 #### method: formatRecord
-Maps the Record against the $format and normalize the found value(s)
+Maps the Record against the $format and returns a mapped array.<br>
+Unknown patterns (e.g. {undefined}) are removed from the response.<br>
+Empty "Lines" are also removed.
 
 ##### example<br>
-The example uses a special formatter for the Record value "Date".
+The example uses an additional ValueConverter for the Record value "Date".
 ````
 use DateTime;
-use Terrazza\Component\Logger\IRecordTokenValueConverter;
+use Terrazza\Component\Logger\IRecordValueConverter;
 use Terrazza\Component\Logger\Record;
+use Terrazza\Component\Logger\Formatter\RecordFormatter;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
 
-class RecordTokenValueDate implements IRecordTokenValueConverter {
+class RecordTokenValueDate implements IRecordValueConverter {
     private string $dateFormat;
     public function __construct(string $dateFormat="Y-m-d H:i:s.u") {
         $this->dateFormat                           = $dateFormat;
@@ -188,17 +224,20 @@ class RecordTokenValueDate implements IRecordTokenValueConverter {
     }
 }
 
-$formatter = new ArrayFormatter(
-   new RecordTokenReader([
-      "Date" => new RecordTokenValueDate("Y-m-d H:i:s")
-   ]),
-   new NormalizerFlat("|"),
+$formatter = new RecordFormatter(
+   new NonScalarJsonEncode,
    ["Date", "Message"]
-);   
+);
+$formatter->pushConverter("Date", new RecordTokenValueDate);   
 
-$example = new Example();
-$record  = Record::create("LoggerName", 100, "Message");
-echo $formatter->formatRecord($record); // 2022-12-31 23:59:01
+$record  = Record::create("LoggerName", 100, "myMessage");
+var_dump($formatter->formatRecord($record)); 
+/*
+[
+   "Date" => 2022-12-31 23:59:01,
+   "Message" => "myMessage"
+]
+*/
 ````
 
 ### Handler
@@ -209,68 +248,98 @@ There are two different types of handler provided. In any case a handler is the 
 #### ChannelHandler
 the ChannelHandler allows us to collect handler to the same channel. He takes care about, that every handler has 
 - the same formatter
-- the same normalizer
 - the same writer
-To use the channelHandler as a Logger itself he implements the IHander-Methods, too.
+To use the channelHandler as a Logger itself he implements the IHandler-Methods, too.
 
-#### method: pushHandler
-Method to add a new Handler within his [HandlerPattern](#object-handler-pattern) and format.
+##### method: pushHandler
+Method to add a new Handler for a given LogLevel and format.
+
+##### method: isHandling
+Business logic to validate if any handler has to be used for a given Record<br>
+
+##### method: writeRecord
+all Handlers pushed to this channel will be used ($handler->writeRecord), if the handler::isHandling matches.
 
 <a id="object-single-handler" name="object-single-handler"></a>
 <a id="user-content-object-single-handler" name="user-content-object-single-handler"></a>
-
 #### SingleHandler
 The SingleHandler provides the common way to create a handler for a Logger.
 The only difference to the common implementation: 
-- instead of logLevel, every handler is identified by a HandlerPattern
+- instead of logLevel
 - the SingleHandler has to be injected within a [Channel](#object-channel)
 
-<a id="object-handler-pattern" name="object-handler-pattern"></a>
-<a id="user-content-object-handler-pattern" name="user-content-object-handler-pattern"></a>
-#### HandlerPattern
-The HandlerPattern cover the unique identifier for a Handler. The common identifier is the LogLevel.
+<a id="object-converter" name="object-converter"></a>
+<a id="user-content-object-converter" name="user-content-object-converter"></a>
+### Converter
+A [LogRecord](#object-record) will be first converted/mapped with the [RecordFormatter](#object-formatter)<br>
+Afterwards, it depends on the target/writer the array has to be formatted again.<br><br> 
+We actually include/provide two Converter:
+- convert to a string, json type
+- convert to a string, e.g. for console logging
+In any case the Converter is injected into the [Writer](#object-writer-stream).
 
-<a id="object-normlizer" name="object-normlizer"></a>
-<a id="user-content-object-normlizer" name="user-content-object-normlizer"></a>
-### Normalizer
-The normalizers are required to
-- convert a single value from the Record into a "normalized" value
-- convert the full message into a "normalized" value.
+#### FormattedRecordFlat
+Converts the mapped LogRecord into a string within a delimiter for each row.<br>
+For nonScalar values we use json_encode to convert the value.<br>
+##### method: setNonScalarPrefix(string $delimiter)
+by using this method nonScalar values will be prefixed with the dataKey and the delimiter.<br>
+arguments:
+- delimiter (string, required)
+- encodingFlags (int, optional)
 
-Every writer will require his own Normalizer and its up to the devs to initialize them however they want.
-#### FlatNormalizer
+_example of usage_:<br>
 ```
-$normalizer = new NormalizerFlat($delimiter); // string which will be used to join the message properties
-```
-Normalizer to
-- convert a record value int a flat string
-- convert the full record into a flat string
-#### JsonNormalizer
-```
-$normalizer = new NormalizerJson($encodeFlags); // option to set eg. JSON_PRETTY_PRINT
-```
-Normalizer to
-- convert a record value int a flat string, by using a json_encode
-- convert the full record into a flat string, by using a json_encode
+use Terrazza\Component\Logger\Converter\FormattedRecord\FormattedRecordFlat;
 
+$formatter = new FormattedRecordFlat("|",0);
+echo $formatter->convert(["message" => "myMessage", "context" => ["k" => "v"]); 
+//myMessage|{"k":"v"}
+
+$formatter->setNonScalarPrefix(":");
+echo $formatter->convert(["message" => "myMessage", "context" => ["k" => "v"]); 
+//myMessage|context:{"k":"v"}
+```
+
+#### FormattedRecordJson
+Converts the mapped LogRecord into a string by using json_encode.<br>
+arguments:
+- encodingFlags (int, optional)
+
+_example of usage_:<br>
+```
+use Terrazza\Component\Logger\Converter\FormattedRecord\FormattedRecordJson;
+
+$formatter = new FormattedRecordJson(0);
+echo $formatter->convert(["message" => "myMessage", "context" => ["k" => "v"]); 
+//{"message" : "myMessage", "context": {"k":"v"}}
+```
 ### Writer
-<a id="object-writer-html" name="object-writer-html"></a>
-<a id="user-content-object-writer-html" name="user-content-object-writer-html"></a>
-#### HtmlWriter
-Simple echo of the converted record.
-The content can be wrapped within a given htmlWrap.
-In any case the content will be echoed by using sprintf to allows the dev to format the response.
-```
-$writer = new HtmlWriter("<span>%s</span>");
-```
 
-<a id="object-writer-stream" name="object-writer-stream"></a>
-<a id="user-content-object-writer-stream" name="user-content-object-writer-stream"></a>
-#### StreamWriter
+<a id="object-writer-stream-file" name="object-writer-stream-file"></a>
+<a id="user-content-object-writer-stream-file" name="user-content-object-writer-stream-file"></a>
+#### StreamFile
 Save converted record to a file.<br>
-<i>The implementation add a PHP_EOF at the end of the converted record.</i> 
+arguments:
+- converter (IFormattedRecordConverter, required
+- filename (string required)
+- flags (int, optional, default: 0)
+
+_notice:<br>
+The Converter should convert the formatted LogRecord into a string._<br> 
+ 
 ```
-$writer = new HtmlWriter("php://stdout");
+use Terrazza\Component\Logger\Writer\StreamFile;
+use Terrazza\Component\Logger\Converter\FormattedRecord\FormattedRecordFlat;
+
+$logFile    = "log.txt";
+@unlink($logFile);
+$converter  = new FormattedRecordFlat("|",0);
+$writer     = new StreamFile($converter, $logFile);
+$writer->write(["message" => "myMessage", "context" => ["k" => "v"]);
+
+$logContent = file_get_contents($logFile);
+echo $logContent;
+//{"message" : "myMessage", "context": {"k":"v"}}
 ```
 
 <a id="install" name="install"></a>
@@ -294,30 +363,48 @@ composer require terrazza/logger
 ### Channel
 #### setup a channel
 ```
-$writer    = new StreamWriter("php://stdout");
-$formatter = new ArrayFormatter(new RecordTokenReader([
-      "Date" => new RecordTokenValueDate("Y-m-d H:i:s.U"),
-      "Context.Exception" => new RecordTokenValueException(0, false), // maxTraceLevel=0, dumpArgs=false
-   ]), new NormalizerFlat("|")); 
-$channel   = new Channel("channelName", $writer, $formatter);
+use Terrazza\Component\Logger\Converter\FormattedRecord\FormattedRecordFlat;
+use Terrazza\Component\Logger\Writer\StreamFile;
+use Terrazza\Component\Logger\Formatter\RecordFormatter;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
+use Terrazza\Component\Logger\Channel;
+
+$writeConverter   = new FormattedRecordFlat("|",0); 
+$writer           = new StreamFile($writeConverter, "test.log");
+$formatter        = new RecordFormatter(new NonScalarJsonEncode(), [
+   "Message" => "{Level}-{Message}-{Context.pid}"
+]); 
+$channel          = new Channel("channelName", $writer, $formatter);
 ```
-### Handler
+### SingleHandler
 #### setup a handler
+_notice:<br>
+next code lines depends on previous example... (setup a channel)_
 ```
-$pattern   = new HandlerPattern(Logger::ERROR);
-$format    = ["LoggerName", "Level", "Message"];
-$handler   = new SingleHandler($pattern, $channel, $format);
+use Terrazza\Component\Logger\Handler\SingleHandler;
+use Terrazza\Component\Logger\Logger;
+
+$handler          = new SingleHandler(Logger::WARNING, $channel);
 ```
 ### Create Logger
 #### create within a handler
+_notice:<br>
+next code lines depends on previous example... (setup a handler)_
 ```
-$logger = new Logger("loggerName", [], $handler);
+use Terrazza\Component\Logger\Logger;
+
+// additinal we initialize the Context with pid = getmypid
+// the formatter uses {Context.pid} and will print it
+
+$logger           = new Logger("loggerName", ["pid" => "myPID"], $handler);
 $logger->error($message = "message");
 ```
 #### create and push a handler
 ```
-$logger = new Logger("loggerName", []);
-$logger = $logger->withHandler($handler);
+use Terrazza\Component\Logger\Logger;
+
+$logger           = new Logger("loggerName", ["pid" => getmypid()]);
+$logger           = $logger->withHandler($handler);
 $logger->error($message = "message");
 ```
 ### Usage of Logger
@@ -325,12 +412,11 @@ $logger->error($message = "message");
 ```
 $logger->notice("myMessage");
 // by using our examples above this message will not be printed
-// ...cause the logLevel for the Handler is ERROR
+// ...cause the logLevel for the Handler is WARNING
 ```
 
 #### produce an ERROR
 ```
 $logger->error("myMessage"); 
-// output to stdout will be
-// loggerName|400|myMessage
+// output to file will be: 400-myMessage-myPID
 ```

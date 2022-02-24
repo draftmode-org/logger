@@ -15,14 +15,14 @@ class ChannelLoggerTest extends TestCase {
 
     private function warningHandler() : array {
         return [
-            new HandlerPattern(Logger::WARNING),
+            Logger::WARNING,
             ["LoggerName", "Level", "Message"]
         ];
     }
 
     private function errorHandler() : array {
         return [
-            new HandlerPattern(Logger::ERROR),
+            Logger::ERROR,
             ["LoggerName", "LevelName", "Message"]
         ];
     }

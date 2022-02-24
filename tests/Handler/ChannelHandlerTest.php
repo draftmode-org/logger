@@ -3,7 +3,6 @@ namespace Terrazza\Component\Logger\Tests\Handler;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Channel;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
-use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterMock;
 use Terrazza\Component\Logger\Tests\_Mocks\RecordMocks;
@@ -13,7 +12,7 @@ class ChannelHandlerTest extends TestCase {
     function test() {
         $channel        = new Channel("channel", new WriterMock(), new FormatterMock());
         $handler        = new ChannelHandler($channel);
-        $handler->pushHandler(new HandlerPattern(Logger::WARNING), []);
+        $handler->pushHandler(Logger::WARNING, []);
         $emptyHandler   = new ChannelHandler($channel);
         $this->assertEquals([
             false,

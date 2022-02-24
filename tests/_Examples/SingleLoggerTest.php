@@ -18,7 +18,7 @@ class SingleLoggerTest extends TestCase {
      */
     function testWithHandler() {
         $logger = (new Logger($loggerName = "loggerName"))->withHandler(HandlerMock::getSingleHandler(
-            new HandlerPattern(Logger::WARNING),
+            Logger::WARNING,
             ["LoggerName", "Level", "Message"]
         ));
         $logger->error($message = "message");
@@ -30,7 +30,7 @@ class SingleLoggerTest extends TestCase {
 
     function testWithNamespace() {
         $logger = (new Logger($loggerName = "loggerName"))->withHandler(HandlerMock::getSingleHandler(
-            new HandlerPattern(Logger::WARNING),
+            Logger::WARNING,
             ["LoggerName", "Level", "Message", "Namespace", "sNamespace"]
         ));
         $logger = $logger->withNamespace(__NAMESPACE__);
@@ -43,7 +43,7 @@ class SingleLoggerTest extends TestCase {
 
     function testWithMethod() {
         $logger = (new Logger($loggerName = "loggerName"))->withHandler(HandlerMock::getSingleHandler(
-            new HandlerPattern(Logger::WARNING),
+            Logger::WARNING,
             ["LoggerName", "Level", "Message", "Method", "sMethod", "context.index"]
         ));
         $logger = $logger->withMethod(__METHOD__);
@@ -56,7 +56,7 @@ class SingleLoggerTest extends TestCase {
 
     function testWithContext() {
         $logger = (new Logger($loggerName = "loggerName", ["iContent" => $iContent = "content"]))->withHandler(HandlerMock::getSingleHandler(
-            new HandlerPattern(Logger::WARNING),
+            Logger::WARNING,
             ["LoggerName", "Level", "Message", "Context.iContent", "Context.wContent"]
         ));
         $logger = $logger->withMethod(__METHOD__);

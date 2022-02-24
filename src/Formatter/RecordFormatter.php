@@ -6,7 +6,7 @@ use Terrazza\Component\Logger\IRecordFormatter;
 use Terrazza\Component\Logger\IRecordValueConverter;
 use Terrazza\Component\Logger\Record;
 
-class ArrayFormatter implements IRecordFormatter {
+class RecordFormatter implements IRecordFormatter {
     private INonScalarConverter $nonScalarConverter;
     private array $format;
     private array $valueConverter=[];

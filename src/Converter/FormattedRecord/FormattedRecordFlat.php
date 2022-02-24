@@ -4,9 +4,17 @@ use Terrazza\Component\Logger\Converter\IFormattedRecordConverter;
 
 class FormattedRecordFlat implements IFormattedRecordConverter {
     private string $delimiter;
-    public function __construct(string $delimiter) {
-        $this->delimiter = $delimiter;
+    private ?string $nonScalarPrefix=null;
+    private int $encodingFlags;
+    public function __construct(string $delimiter, int $encodingFlags=0) {
+        $this->delimiter                            = $delimiter;
+        $this->encodingFlags                        = $encodingFlags;
     }
+
+    public function setNonScalarPrefix(string $delimiter) : void {
+        $this->nonScalarPrefix                      = $delimiter;
+    }
+
     /**
      * @param array $data
      * @return string
@@ -14,11 +22,16 @@ class FormattedRecordFlat implements IFormattedRecordConverter {
     public function convert(array $data) : string {
         $lines										= [];
         foreach ($data as $dKey => $dValue) {
-            if (is_string($dValue)) {
+            if (is_scalar($dValue) || is_null($dValue)) {
                 $lines[]							= $dValue;
             }
             else {
-                $lines[] 							= $dKey. PHP_EOL . json_encode($dValue, JSON_PRETTY_PRINT);
+                $content                            = "";
+                if ($this->nonScalarPrefix) {
+                    $content                        .= $dKey . $this->nonScalarPrefix;
+                }
+                $content                            .= json_encode($dValue, $this->encodingFlags);
+                $lines[] 							= $content;
             }
         }
         return implode($this->delimiter, $lines);

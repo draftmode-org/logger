@@ -2,10 +2,8 @@
 namespace Terrazza\Component\Logger\Tests\Common;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Channel;
-use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
-use Terrazza\Component\Logger\ILogger;
 use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterMock;
 use Terrazza\Component\Logger\Tests\_Mocks\WriterMock;
@@ -13,7 +11,7 @@ use Terrazza\Component\Logger\Tests\_Mocks\WriterMock;
 class LoggerTest extends TestCase {
     private function getEmptyHandler(int $logLevel) : IHandler {
         return new SingleHandler(
-            new HandlerPattern($logLevel),
+            $logLevel,
             new Channel(
                 "channel",
                 new WriterMock(),

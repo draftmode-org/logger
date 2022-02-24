@@ -2,7 +2,6 @@
 namespace Terrazza\Component\Logger\Tests\Handler;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Channel;
-use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\Tests\_Mocks\FormatterMock;
@@ -14,8 +13,7 @@ class SingleHandlerTest extends TestCase {
         $writer     = new WriterMock();
         $formatter  = new FormatterMock();
         $channel    = new Channel("channel", $writer, $formatter);
-        $pattern    = new HandlerPattern(Logger::WARNING);
-        $handler    = new SingleHandler($pattern, $channel, []);
+        $handler    = new SingleHandler(Logger::WARNING, $channel, []);
         $this->assertEquals([
             true,
             false,
