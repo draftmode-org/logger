@@ -27,8 +27,6 @@ class Logger implements ILogger {
     ];
 
     private string $loggerName;
-    private ?string $method                         = null;
-    private ?string $namespace                      = null;
     private array $context;
     /**
      * @var array|IHandler[]
@@ -49,40 +47,6 @@ class Logger implements ILogger {
         $logger                                     = clone $this;
         $logger->handler[]                          = $handler;
         return $logger;
-    }
-
-    /**
-     * @param string $namespace
-     * @return ILogger
-     */
-    public function withNamespace(string $namespace) : ILogger {
-        $logger                                     = clone $this;
-        $logger->namespace                          = $namespace;
-        return $logger;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getNamespace() : ?string {
-        return $this->namespace;
-    }
-
-    /**
-     * @param string $method
-     * @return ILogger
-     */
-    public function withMethod(string $method) : ILogger {
-        $logger                                     = clone $this;
-        $logger->method                             = $method;
-        return $logger;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getMethod() : ?string {
-        return $this->method;
     }
 
     /**
@@ -134,8 +98,6 @@ class Logger implements ILogger {
             $this->loggerName,
             $logLevel,
             $message,
-            $this->namespace,
-            $this->method,
             $context ?? []
         );
 

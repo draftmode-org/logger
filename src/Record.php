@@ -11,8 +11,6 @@ class Record {
     private array $context;
     private int $memUsed;
     private int $memAllocated;
-    private ?string $namespace=null;
-    private ?string $method=null;
 
     /**
      * @param DateTime $logDate
@@ -21,8 +19,6 @@ class Record {
      * @param string $logMessage
      * @param int $memUsed
      * @param int $memAllocated
-     * @param string|null $namespace
-     * @param string|null $method
      * @param array|null $context
      */
     protected function __construct(DateTime $logDate,
@@ -31,8 +27,6 @@ class Record {
                                    string $logMessage,
                                    int $memUsed,
                                    int $memAllocated,
-                                   string $namespace=null,
-                                   string $method=null,
                                    array $context=null)
     {
         $this->logDate                              = $logDate;
@@ -41,8 +35,6 @@ class Record {
         $this->logMessage                           = $logMessage;
         $this->memUsed                           	= $memUsed;
         $this->memAllocated                         = $memAllocated;
-        $this->namespace                        	= $namespace;
-        $this->method                         		= $method;
         $this->context                              = $context ?? [];
     }
 
@@ -50,16 +42,12 @@ class Record {
      * @param string $loggerName
      * @param int $logLevel
      * @param string $logMessage
-     * @param string|null $namespace
-     * @param string|null $method
      * @param array|null $context
      * @return Record
      */
     public static function createRecord(string $loggerName,
                                         int $logLevel,
                                         string $logMessage,
-                                        ?string $namespace=null,
-                                        ?string $method=null,
                                         array $context=null): Record {
         return new self(
             new DateTime(),
@@ -68,8 +56,6 @@ class Record {
             $logMessage,
             round(memory_get_usage(false) / 1024),
             round(memory_get_usage(true) / 1024),
-            $namespace,
-            $method,
             $context
         );
     }
@@ -116,17 +102,10 @@ class Record {
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getNamespace() :?string {
-        return $this->namespace;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getMethod() :?string {
-        return $this->method;
+    public function getNamespace() :string {
+        return $this->getCallerNamespace();
     }
 
     /**
@@ -151,22 +130,31 @@ class Record {
     }
 
     /**
+     * @return string
+     */
+    private function getCallerNamespace() : string {
+        $traces                                     = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $trace				                        = $traces[2];
+        $className			                        = $trace["class"];
+        return join("\\", array_slice(explode("\\", $className), 0, -1));
+    }
+
+    /**
      * @return array
      */
     public function getToken() : array {
+        $namespace                                  = $this->getCallerNamespace();
         return [
-            'Date' 				=> $this->getLogDate(),
-            'Level' 			=> $this->getLogLevel(),
-            'LevelName'     	=> $this->getLogLevelName(),
-            'LoggerName' 		=> $this->getLoggerName(),
-            'Namespace'			=> $this->getNamespace(),
-            'sNamespace'		=> $this->getNamespace() ? basename($this->getNamespace()) : null,
-            'Method'			=> $this->getMethod(),
-            'sMethod'			=> $this->getMethod() ? basename($this->getMethod()) : null,
-            'MemUsed'			=> $this->getMemUsed(),
-            'MemAllocated'		=> $this->getMemAllocated(),
-            'Message' 			=> $this->getLogMessage(),
-            'Context'			=> $this->getContext(),
+            'Date' 				                    => $this->getLogDate(),
+            'Level' 			                    => $this->getLogLevel(),
+            'LevelName'     	                    => $this->getLogLevelName(),
+            'LoggerName' 		                    => $this->getLoggerName(),
+            'Namespace'			                    => $namespace,
+            'sNamespace'		                    => basename($namespace),
+            'MemUsed'			                    => $this->getMemUsed(),
+            'MemAllocated'		                    => $this->getMemAllocated(),
+            'Message' 			                    => $this->getLogMessage(),
+            'Context'			                    => $this->getContext(),
         ];
     }
 }

@@ -4,12 +4,11 @@ This component is an implementation of PSR/Log standard with some extensions.
 1. Object/Classes
    1. [Logger](#object-logger) 
       1. [method: withHandler](#object-logger-withhandler)
-      2. [method: withNamespace](#object-logger-withnamespace)
-      3. [method: withMethod](#object-logger-withmethod)
-      4. [Context](#object-logger-context)
+      2. [Context](#object-logger-context)
          1. method: hasContextKey
          2. method: getContextByKey
    2. [Record](#object-record)
+   3. [LoggerFilter](#object-logger-filter)
    4. [Formatter](#object-formatter)
    5. Writer
       1. [StreamFile](#object-writer-stream-file)
@@ -21,59 +20,18 @@ This component is an implementation of PSR/Log standard with some extensions.
 4. [Requirements](#require)
 5. [Examples](#examples)
 
+## Object/Classes
+
 <a id="object-logger" name="object-logger"></a>
 <a id="user-content-object-logger" name="user-content-object-logger"></a>
-## Object/Classes
 ### Logger
 The Logger object provides 3 more properties than the common PSR implementations.
-- namespace
-- method
 - context
 
 <a id="object-logger-withhandler" name="object-logger-withhandler"></a>
 <a id="user-content-object-logger-withhandler" name="user-content-object-logger-withhandler"></a>
 #### method: withHandler
 fulfill the same as pushHandler, but as immutable
-
-<a id="object-logger-withnamespace" name="object-logger-withnamespace"></a>
-<a id="user-content-object-logger-withnamespace" name="user-content-object-logger-withnamespace"></a>
-#### method: withNamespace
-this method set the property immutable.
-the property itself is forwarded to the RECORD object and can be printed through the formatter with
-- Namespace (full namespace)
-- sNamesace (with the basename of the given namespace)
-
-**method: getNamespace**<br>
-returns the optional set Namespace
-
-<i>example of usage</i><br>
-a class is injected with the component and inside the constructor<br>
-```
-$logger = $logger->withNamespace(__NAMESPACE__);
-$logger->notice("message"); // the LogRecord provides Namespace attribute
-echo $logger->getNamespace(); // __NAMESPACE
-```
-for all methods (error, waring, ...) the property is available in the Record and can be formatted.
-
-<a id="object-logger-withmethod" name="object-logger-withmethod"></a>
-<a id="user-content-object-logger-withmethod" name="user-content-object-logger-withmethod"></a>
-#### method: withMethod
-this method set the property immutable.
-the property itself is forwarded to the RECORD object and can be printed through the formatter with
-- Method (full method)
-- sMethod (with the basename of the given method)
-
-**method: getMethod**<br>
-returns the optional set Method
-
-<i>example of usage</i><br>
-a class is injected with the component and inside the constructor<br>
-```
-$logger = $logger->withMethod(__METHOD__);
-$logger->notice("hello"); // the LogRecord provides Method attribute
-echo $logger->getMethod(); // __METHOD__
-```
-for all methods (error, waring, ...) the property is available in the Record and can be formatted.
 
 <a id="object-logger-context" name="object-logger-context"></a>
 <a id="user-content-object-logger-context" name="user-content-object-logger-context"></a>
@@ -128,21 +86,21 @@ LogRecord properties:
 - Level (int)
 - LevelName (string)
 - LoggerName (string) 
-- Namespace (string, optional)
-- sNamespace (string, optional) (_basename(Namespace)_)
-- Method (string, optional)
-- sMethod (string, optional) (_basename(Method)_)
 - MemUsed (int)
 - MemAllocated (int)
 - Message (string)
-- Context (array) 
+- Context (array)
 
 #### method/static createRecord
 this method is used inside <i>Logger</i> to create a new LogRecord object.
 
 #### method: getToken()
 this method is used in the <i>Formatter</i> to get the record "encoded".
-Every element can be accessed through the "format" e.g. {Level}{LevelName}{Context.name}
+Every element can be accessed through the "format" e.g. {Level}{LevelName}{Context.name}<br>
+
+**Namespace and sNamespace**:<br>
+(s)Namespace returns/includes the callerNamespace.<br>
+
 ```
 return [
   'Date'         => $this->getLogDate(),
@@ -159,6 +117,23 @@ return [
   'Context'      => $this->getContext(),
 ]
 ```
+<a id="object-logger-filter" name="object-logger-filter"></a>
+<a id="user-content-object-logger-filter" name="user-content-object-logger-filter"></a>
+### LoggerFilter
+[ChannelHandler](object-channel-handler) and [SingleHandler](object-single-handler) can have a LoggerFilter.<br>
+Properties:
+- include (array, optional)
+- exclude (array, optional)
+- start (array, optional)
+#### method: isHandling (string $callerNamespace) : bool
+**include**<br>
+preg_match callerNamespace against include patterns<br>
+**exclude**<br>
+preg_match callerNamespace against exclude patterns<br>
+**start**<br>
+preg_match callerNamespace against start patterns<br>
+if preg_match is true all further isHandling will be true.
+_(exclude filter overrules start)_
 
 <a id="object-formatter" name="object-formatter"></a>
 <a id="user-content-object-formatter" name="user-content-object-formatter"></a>

@@ -1,6 +1,6 @@
 <?php
 namespace Terrazza\Component\Logger;
-use Terrazza\Component\Logger\Handler\StreamHandlerWriteException;
+use Terrazza\Component\Logger\Writer\WriterException;
 
 interface IHandler {
     /**
@@ -11,7 +11,7 @@ interface IHandler {
 
     /**
      * @param Record $record
-     * @throws StreamHandlerWriteException
+     * @throws WriterException
      */
     public function writeRecord(Record $record) : void;
 

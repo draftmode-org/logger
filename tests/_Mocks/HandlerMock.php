@@ -9,6 +9,7 @@ use Terrazza\Component\Logger\IChannel;
 use Terrazza\Component\Logger\Formatter\RecordFormatter;
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\IHandler;
+use Terrazza\Component\Logger\ILoggerFilter;
 use Terrazza\Component\Logger\Writer\StreamFile;
 
 class HandlerMock {
@@ -19,8 +20,12 @@ class HandlerMock {
     public static function tearDown(): void {
         @unlink(self::stream);
     }
-    public static function getContent() : string {
-        return trim(file_get_contents(self::stream));
+    public static function getContent() :?string {
+        if (file_exists(self::stream)) {
+            return trim(file_get_contents(self::stream));
+        } else {
+            return null;
+        }
     }
 
     public static function getChannel() : IChannel {
@@ -35,11 +40,12 @@ class HandlerMock {
         return new ChannelHandler(self::getChannel($dateFormat));
     }
 
-    public static function getSingleHandler(int $logLevel, array $format) : IHandler {
+    public static function getSingleHandler(int $logLevel, array $format, ?ILoggerFilter $filter=null) : IHandler {
         return new SingleHandler(
             $logLevel,
             self::getChannel(),
-            $format
+            $format,
+            $filter
         );
     }
 }

@@ -6,10 +6,12 @@ class Channel implements IChannel {
     private string $name;
     private IWriter $writer;
     private IRecordFormatter $formatter;
-    public function __construct(string $name, IWriter $writer, IRecordFormatter $formatter) {
+    private ?LoggerFilter $filter;
+    public function __construct(string $name, IWriter $writer, IRecordFormatter $formatter, ?LoggerFilter $filter=null) {
         $this->name 								= $name;
         $this->writer 								= $writer;
         $this->formatter 							= $formatter;
+        $this->filter                               = $filter;
     }
 
     /**
@@ -24,6 +26,13 @@ class Channel implements IChannel {
      */
     public function getFormatter() : IRecordFormatter {
         return $this->formatter;
+    }
+
+    /**
+     * @return LoggerFilter|null
+     */
+    public function getFilter() :?LoggerFilter {
+        return $this->filter;
     }
 
     /**

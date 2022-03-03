@@ -5,6 +5,7 @@ namespace Terrazza\Component\Logger\Handler;
 use Terrazza\Component\Logger\IChannelHandler;
 use Terrazza\Component\Logger\IChannel;
 use Terrazza\Component\Logger\IHandler;
+use Terrazza\Component\Logger\ILoggerFilter;
 use Terrazza\Component\Logger\Record;
 
 class ChannelHandler implements IHandler, IChannelHandler {
@@ -18,9 +19,10 @@ class ChannelHandler implements IHandler, IChannelHandler {
     /**
      * @param int $logLevel
      * @param array $format
+     * @param ILoggerFilter|null $filter
      */
-    public function pushHandler(int $logLevel, array $format) : void {
-        $this->handler[$logLevel]                   = new SingleHandler($logLevel, $this->channel, $format);
+    public function pushHandler(int $logLevel, array $format, ?ILoggerFilter $filter=null) : void {
+        $this->handler[$logLevel]                   = new SingleHandler($logLevel, $this->channel, $format, $filter);
         krsort($this->handler);
     }
     /**

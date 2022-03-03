@@ -49,28 +49,16 @@ class LoggerTest extends TestCase {
 
     function testGetters() {
         $logger     = new Logger("loggerName", [$mKey = "mKey" => $mValue = "mValue"]);
-        $logger2    = $logger->withMethod(__METHOD__);
-        $logger2    = $logger2->withNamespace(__NAMESPACE__);
         $this->assertEquals([
             true,
             $mValue,
             false,
             null,
-            null,
-            null,
-
-            __METHOD__,
-            __NAMESPACE__,
         ],[
             $logger->hasContextKey($mKey),
             $logger->getContextByKey($mKey),
             $logger->hasContextKey("unknown"),
             $logger->getContextByKey("unknown"),
-            $logger->getMethod(),
-            $logger->getNamespace(),
-
-            $logger2->getMethod(),
-            $logger2->getNamespace(),
         ]);
     }
 }

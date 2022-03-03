@@ -1,6 +1,5 @@
 <?php
 namespace Terrazza\Component\Logger\Writer;
-
 use RuntimeException;
 
 class WriterException extends RuntimeException {

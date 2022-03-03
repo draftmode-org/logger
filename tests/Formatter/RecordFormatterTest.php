@@ -13,8 +13,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__
         );
     }
 
@@ -76,8 +74,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__,
             ['key1' => $value1 = 'value1', 'key2' => $value2= 'value2', 'key3' => $value3 = 'value3', $key4 = 'key4' => $value4 = 'value4']
         );
         $this->assertEquals(
@@ -97,8 +93,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__,
             $value = ['key1' => 'value1']
         );
         $this->assertEquals(
@@ -116,8 +110,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__,
             ['key1' => $value = ["key11" => 'value11']]
         );
         $this->assertEquals(
@@ -135,8 +127,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__,
             ['key1' => $key1Value = (object)["key11" => 'value11']]
         );
         $this->assertEquals(
@@ -154,8 +144,6 @@ class RecordFormatterTest extends TestCase {
             "loggerName",
             Logger::DEBUG,
             "logMessage",
-            __NAMESPACE__,
-            __METHOD__,
             ['key1' => $value1 = 'value1']
         );
         $this->assertEquals(
