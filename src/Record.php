@@ -12,6 +12,10 @@ class Record {
     private int $memUsed;
     private int $memAllocated;
 
+    private ?string $traceNamespace=null;
+    private ?string $traceMethod=null;
+    private ?int $traceLine=null;
+
     /**
      * @param DateTime $logDate
      * @param string $loggerName
@@ -102,13 +106,6 @@ class Record {
     }
 
     /**
-     * @return string
-     */
-    public function getNamespace() :string {
-        return $this->getCallerNamespace();
-    }
-
-    /**
      * @return int
      */
     public function getMemUsed() : int {
@@ -130,27 +127,34 @@ class Record {
     }
 
     /**
-     * @return string
+     * @param int $nbrTrace
+     * @return void
      */
-    private function getCallerNamespace() : string {
+    private function getCallerNamespace(int $nbrTrace) : void {
         $traces                                     = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        $trace				                        = $traces[2];
-        $className			                        = $trace["class"];
-        return join("\\", array_slice(explode("\\", $className), 0, -1));
+        $traceClass			                        = $traces[$nbrTrace+1];
+        $traceLine                                  = $traces[$nbrTrace];
+        $className                                  = $traceClass["class"];
+        $this->traceMethod                          = $traceClass["function"];
+        $this->traceLine                            = $traceLine["line"];
+        $namespace                                  = join("\\", array_slice(explode("\\", $className), 0, -1));
+        $this->traceNamespace                       = $namespace;
     }
 
     /**
      * @return array
      */
     public function getToken() : array {
-        $namespace                                  = $this->getCallerNamespace();
+        $this->getCallerNamespace(5);
         return [
             'Date' 				                    => $this->getLogDate(),
             'Level' 			                    => $this->getLogLevel(),
             'LevelName'     	                    => $this->getLogLevelName(),
             'LoggerName' 		                    => $this->getLoggerName(),
-            'Namespace'			                    => $namespace,
-            'sNamespace'		                    => basename($namespace),
+            'Namespace'			                    => $this->traceNamespace,
+            'sNamespace'		                    => $this->traceNamespace ? basename($this->traceNamespace) : null,
+            'Method'			                    => $this->traceMethod,
+            'Line'			                        => $this->traceLine,
             'MemUsed'			                    => $this->getMemUsed(),
             'MemAllocated'		                    => $this->getMemAllocated(),
             'Message' 			                    => $this->getLogMessage(),
