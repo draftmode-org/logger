@@ -1,7 +1,11 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-class Logger implements ILogger {
+use RuntimeException;
+use Terrazza\Component\Logger\Record\LogRecord;
+use Throwable;
+
+class Logger implements LoggerInterface {
     public const LOG                                = 50;
     public const DEBUG                              = 100;
     public const INFO                               = 200;
@@ -11,7 +15,6 @@ class Logger implements ILogger {
     public const CRITICAL                           = 500;
     public const ALERT                              = 550;
     public const EMERGENCY                          = 600;
-    public const EXCEPTION                          = 650;
 
     public static array $levels = [
         self::LOG                                   => 'LOG',
@@ -22,31 +25,132 @@ class Logger implements ILogger {
         self::ERROR                                 => 'ERROR',
         self::CRITICAL                              => 'CRITICAL',
         self::ALERT                                 => 'ALERT',
-        self::EMERGENCY                             => 'EMERGENCY',
-        self::EXCEPTION                             => 'EXCEPTION',
+        self::EMERGENCY                             => 'EMERGENCY'
     ];
 
     private string $loggerName;
     private array $context;
     /**
-     * @var array|IHandler[]
+     * @var ChannelHandlerInterface[]
      */
-    private array $handler;
+    private array $channel                          = [];
 
-    public function __construct(string $loggerName, ?array $context=null, IHandler ...$handler) {
+    /**
+     * @var string
+     */
+    private string $exceptionFile                   = "php://stderr";
+
+    /**
+     * @param string $loggerName
+     * @param array|null $context
+     * @param ChannelHandlerInterface ...$channelHandler
+     */
+    public function __construct(string $loggerName, ?array $context=null, ChannelHandlerInterface ...$channelHandler) {
         $this->loggerName                           = $loggerName;
-        $this->handler                              = $handler ?? [];
         $this->context                              = $context ?? [];
+        foreach ($channelHandler as $handler) {
+            $this->registerChannel($handler);
+        }
     }
 
     /**
-     * @param IHandler $handler
-     * @return ILogger
+     * @param ChannelHandlerInterface $channelHandler
+     * @return LoggerInterface
      */
-    public function withHandler(IHandler $handler) : ILogger {
-        $logger                                     = clone $this;
-        $logger->handler[]                          = $handler;
-        return $logger;
+    public function registerChannel(ChannelHandlerInterface $channelHandler) : LoggerInterface {
+        $channelName                                = $channelHandler->getChannel()->getName();
+        $this->channel[$channelName]                = $channelHandler;
+        return $this;
+    }
+
+    /**
+     * @param string $channelName
+     * @param LogHandlerInterface $logHandler
+     * @return LoggerInterface
+     */
+    public function pushLogHandler(string $channelName, LogHandlerInterface $logHandler) : LoggerInterface {
+        if (array_key_exists($channelName, $this->channel)) {
+            $channelHandler                         = $this->channel[$channelName];
+            $channelHandler->pushLogHandler($logHandler);
+            return $this;
+        } else {
+            throw new RuntimeException("logHandler cannot be pushed, channel ".$channelName." is not registered");
+        }
+    }
+
+    /**
+     *
+     */
+    public function registerExceptionHandler() : void {
+        set_exception_handler([$this, "handleException"]);
+    }
+
+    /**
+     * @param int $errorTypes
+     */
+    public function registerErrorHandler(int $errorTypes = -1) : void {
+        set_error_handler([$this, "handleError"]);//, $errorTypes);
+    }
+
+    /**
+     * @param int $display_errors
+     */
+    public function registerFatalHandler(int $display_errors=0) : void {
+        ini_set('display_errors',$display_errors);
+        register_shutdown_function([$this, "handleFatalError"]);
+    }
+
+    /**
+     * @param string $exceptionFile
+     */
+    public function setExceptionFile(string $exceptionFile) : void {
+        $this->exceptionFile                    = $exceptionFile;
+    }
+
+    /**
+     *
+     */
+    public function handleFatalError() : void {
+        if ($error = error_get_last()) {
+            $this->handleError(
+                $error["type"],
+                $error["message"],
+                $error["file"],
+                $error["line"]
+            );
+        }
+    }
+
+    /**
+     * @param int $errorCode
+     * @param string $message
+     * @param string|null $file
+     * @param int|null $line
+     */
+    public function handleError(int $errorCode, string $message, string $file=null, int $line=null) : void {
+        $context                                    = [
+            "file"                                  => $file,
+            "line"                                  => $line,
+        ];
+        switch ($errorCode) {
+            case E_USER_NOTICE:
+            case E_NOTICE:
+                $this->notice($message, $context);
+                break;
+            case E_USER_WARNING:
+            case E_WARNING:
+                $this->warning($message, $context);
+                break;
+            default:
+                $this->emergency("$message (#$errorCode) {$file} {$line}", $context);
+        }
+    }
+
+    /**
+     * @param Throwable $exception
+     */
+    public function handleException(Throwable $exception) : void {
+        $this->emergency("application exception: ".$exception->getMessage());//, ["exception" => $exception]);
     }
 
     /**
@@ -94,17 +198,23 @@ class Logger implements ILogger {
             $context                                = $context + $this->context;
         }
         //
-        $record = Record::createRecord(
+        $record = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
             $message,
             $context ?? []
         );
 
-        foreach ($this->handler as $handler) {
-            if ($handler->isHandling($record)) {
-                $handler->writeRecord($record);
+        try {
+            foreach ($this->channel as $channelHandler) {
+                $channelHandler->handleRecord($record);
             }
+        } catch (Throwable $exception) {
+            @file_put_contents($this->exceptionFile, join(" ", [
+                (new \DateTime())->format("Y-m-d H:i:s.u"),
+                "[".self::$levels[self::EMERGENCY]."]",
+                $exception->getMessage()
+            ]), FILE_APPEND);
         }
     }
 

@@ -1,17 +1,18 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Common;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\LoggerFilter;
+use Terrazza\Component\Logger\LogHandlerFilter;
+use Terrazza\Component\Logger\LogHandlerFilterInterface;
 
 class LoggerFilterTest extends TestCase {
 
     function testNoFilter() {
-        $filter = new LoggerFilter();
+        $filter = new LogHandlerFilter();
         $this->assertTrue($filter->isHandling("myNamespace"));
     }
 
     function testInclude() {
-        $filter = new LoggerFilter(["Terrazza/Component"]);
+        $filter = new LogHandlerFilter(["Terrazza/Component"]);
         $this->assertEquals([
             true,
             false
@@ -22,7 +23,7 @@ class LoggerFilterTest extends TestCase {
     }
 
     function testExclude() {
-        $filter = new LoggerFilter(null, ["Terrazza/Component"]);
+        $filter = new LogHandlerFilter(null, ["Terrazza/Component"]);
         $this->assertEquals([
             false,
             true,
@@ -33,7 +34,7 @@ class LoggerFilterTest extends TestCase {
     }
 
     function testStart() {
-        $filter = new LoggerFilter(null, null, ["Terrazza\Component\Logger\Tests\Common"]);
+        $filter = new LogHandlerFilter(null, null, ["Terrazza\Component\Logger\Tests\Common"]);
         $this->assertEquals([
             false,
             false,
@@ -48,7 +49,7 @@ class LoggerFilterTest extends TestCase {
     }
 
     function testStartExclude() {
-        $filter = new LoggerFilter(null, ["LoggerFilterTest"], ["Terrazza\Component\Logger\Tests\Common"]);
+        $filter = new LogHandlerFilter(null, ["LoggerFilterTest"], ["Terrazza\Component\Logger\Tests\Common"]);
         $this->assertEquals([
             false,
             false,

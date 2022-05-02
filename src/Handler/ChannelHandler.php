@@ -2,57 +2,61 @@
 
 namespace Terrazza\Component\Logger\Handler;
 
-use Terrazza\Component\Logger\IChannelHandler;
-use Terrazza\Component\Logger\IChannel;
-use Terrazza\Component\Logger\IHandler;
-use Terrazza\Component\Logger\ILoggerFilter;
-use Terrazza\Component\Logger\Record;
+use Terrazza\Component\Logger\ChannelHandlerInterface;
+use Terrazza\Component\Logger\ChannelInterface;
+use Terrazza\Component\Logger\Record\LogRecord;
+use Terrazza\Component\Logger\LogHandlerInterface;
 
-class ChannelHandler implements IHandler, IChannelHandler {
-    /** @var array|IHandler[] */
-    private array $handler=[];
-    private IChannel $channel;
-    public function __construct(IChannel $channel) {
+class ChannelHandler implements ChannelHandlerInterface {
+    private ChannelInterface $channel;
+    /** @var LogHandlerInterface[] */
+    private array $logHandler=[];
+    public function __construct(ChannelInterface $channel, LogHandlerInterface ...$logHandler) {
         $this->channel                              = $channel;
-    }
-
-    /**
-     * @param int $logLevel
-     * @param array $format
-     * @param ILoggerFilter|null $filter
-     */
-    public function pushHandler(int $logLevel, array $format, ?ILoggerFilter $filter=null) : void {
-        $this->handler[$logLevel]                   = new SingleHandler($logLevel, $this->channel, $format, $filter);
-        krsort($this->handler);
-    }
-    /**
-     * @param Record $record
-     * @return bool
-     */
-    public function isHandling(Record $record): bool {
-        foreach ($this->handler as $handler) {
-            if ($handler->isHandling($record)) {
-                return true;
-            }
+        foreach ($logHandler as $singleLogHandler) {
+            $this->pushLogHandler($singleLogHandler);
         }
-        return false;
     }
 
     /**
-     * @param Record $record
+     * @return ChannelInterface
      */
-    public function writeRecord(Record $record): void {
-        foreach ($this->handler as $handler) {
+    public function getChannel(): ChannelInterface {
+        return $this->channel;
+    }
+
+    /**
+     * @return LogHandlerInterface[]
+     */
+    public function getLogHandler() : array {
+        return $this->logHandler;
+    }
+
+    /**
+     * @param LogHandlerInterface $logHandler
+     */
+    public function pushLogHandler(LogHandlerInterface $logHandler) : void {
+        $logLevel                                   = $logHandler->getLogLevel();
+        $logHandler                                 = $logHandler->setFormatter($this->channel->getFormatter());
+        $this->logHandler[$logLevel]                = $logHandler;
+        $this->sortLogHandler();
+    }
+
+    private function sortLogHandler() : void {
+        krsort($this->logHandler);
+    }
+
+    /**
+     * @param LogRecord $record
+     */
+    public function handleRecord(LogRecord $record): void {
+        foreach ($this->logHandler as $handler) {
             if ($handler->isHandling($record)) {
-                $handler->writeRecord($record);
+                $this->channel->getWriter()->write(
+                    $handler->getFormatter()->formatRecord($record)
+                );
                 break;
             }
-        }
-    }
-
-    public function close(): void {
-        foreach ($this->handler as $handler) {
-            $handler->close();
         }
     }
 }

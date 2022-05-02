@@ -2,8 +2,8 @@
 namespace Terrazza\Component\Logger\Tests\Writer;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Tests\_Mocks\FormattedRecordConverterMock;
-use Terrazza\Component\Logger\Writer\StreamFile;
-use Terrazza\Component\Logger\Writer\WriterException;
+use Terrazza\Component\Logger\Writer\LogStreamFileWriter;
+use Terrazza\Component\Logger\Writer\LogWriterException;
 
 class StreamWriterTest extends TestCase {
     public string $stream="tests/Writer/stream.txt";
@@ -15,7 +15,7 @@ class StreamWriterTest extends TestCase {
     }
 
     function testSuccessful() {
-        $writer = new StreamFile(new FormattedRecordConverterMock, $this->stream);
+        $writer = new LogStreamFileWriter(new FormattedRecordConverterMock, $this->stream);
         $writer->write([$record="myMessage"]);
         $this->assertEquals(
             $record.PHP_EOL,
@@ -24,8 +24,8 @@ class StreamWriterTest extends TestCase {
     }
 
     function testFailure() {
-        $writer = new StreamFile(new FormattedRecordConverterMock, "folder/file.txt");
-        $this->expectException(WriterException::class);
+        $writer = new LogStreamFileWriter(new FormattedRecordConverterMock, "folder/file.txt");
+        $this->expectException(LogWriterException::class);
         $writer->write([$record="myMessage"]);
     }
 }

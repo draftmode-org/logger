@@ -1,15 +1,15 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Formatter;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
-use Terrazza\Component\Logger\Formatter\RecordFormatter;
-use Terrazza\Component\Logger\IRecordValueConverter;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonConverter;
+use Terrazza\Component\Logger\Formatter\LogRecordFormatter;
 use Terrazza\Component\Logger\Logger;
-use Terrazza\Component\Logger\Record;
+use Terrazza\Component\Logger\LogRecordValueConverterInterface;
+use Terrazza\Component\Logger\Record\LogRecord;
 
 class RecordFormatterTest extends TestCase {
-    private function getRecord() : Record {
-        return Record::createRecord(
+    private function getRecord() : LogRecord {
+        return LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
@@ -17,15 +17,15 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testNoFormat() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, []);
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, []);
         $this->assertEquals([], $formatter->formatRecord($this->getRecord()));
     }
 
     function testMethodWithFormat() {
-        $nonScalar  = new NonScalarJsonEncode();
+        $nonScalar  = new NonScalarJsonConverter();
         $record     = $this->getRecord();
-        $formatter  = (new RecordFormatter($nonScalar, []))->withFormat(["LoggerName", "Level"]);
+        $formatter  = (new LogRecordFormatter($nonScalar, []))->withFormat(["LoggerName", "Level"]);
         $this->assertEquals(
             ["LoggerName" => $record->getLoggerName(), "Level" => $record->getLogLevel()],
             $formatter->formatRecord($record)
@@ -33,9 +33,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithFormat() {
-        $nonScalar  = new NonScalarJsonEncode();
+        $nonScalar  = new NonScalarJsonConverter();
         $record     = $this->getRecord();
-        $formatter  = new RecordFormatter($nonScalar, ["LoggerName", "Level"]);
+        $formatter  = new LogRecordFormatter($nonScalar, ["LoggerName", "Level"]);
         $this->assertEquals(
             ["LoggerName" => $record->getLoggerName(), "Level" => $record->getLogLevel()],
             $formatter->formatRecord($record)
@@ -43,10 +43,10 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithConverter() {
-        $nonScalar  = new NonScalarJsonEncode();
+        $nonScalar  = new NonScalarJsonConverter();
         $record     = $this->getRecord();
-        $formatter  = new RecordFormatter($nonScalar, ["LoggerName", "Level"]);
-        $formatter->pushConverter("LoggerName", new class implements IRecordValueConverter {
+        $formatter  = new LogRecordFormatter($nonScalar, ["LoggerName", "Level"]);
+        $formatter->pushConverter("LoggerName", new class implements LogRecordValueConverterInterface {
             public function getValue($value) : string {
                 return "yes";
             }
@@ -58,9 +58,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithConcatFormat() {
-        $nonScalar  = new NonScalarJsonEncode();
+        $nonScalar  = new NonScalarJsonConverter();
         $record     = $this->getRecord();
-        $formatter  = new RecordFormatter($nonScalar, ["LoggerName" =>"ln:{LoggerName}:l:{Level}"]);
+        $formatter  = new LogRecordFormatter($nonScalar, ["LoggerName" =>"ln:{LoggerName}:l:{Level}"]);
         $this->assertEquals(
             ["LoggerName" => "ln:loggerName:l:".Logger::DEBUG],
             $formatter->formatRecord($record)
@@ -68,9 +68,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithContext() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, ["Message" => "{Context.key2}-{Context.key3}-{Context.key7}", "Context", "key1" =>"{Context.key1}"]);
-        $record     = Record::createRecord(
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, ["Message" => "{Context.key2}-{Context.key3}-{Context.key7}", "Context", "key1" =>"{Context.key1}"]);
+        $record     = LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
@@ -87,9 +87,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithContextNonScalar() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, ["Context" => "c:{Context}"]);
-        $record     = Record::createRecord(
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, ["Context" => "c:{Context}"]);
+        $record     = LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
@@ -104,9 +104,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithContextNonScalarArray() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, ["Message" => "message:{Context.key1}"]);
-        $record     = Record::createRecord(
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, ["Message" => "message:{Context.key1}"]);
+        $record     = LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
@@ -121,9 +121,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithContextNonScalarObject() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, ["Message" => "message:{Context.key1}"]);
-        $record     = Record::createRecord(
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, ["Message" => "message:{Context.key1}"]);
+        $record     = LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",
@@ -138,9 +138,9 @@ class RecordFormatterTest extends TestCase {
     }
 
     function testWithContextDefault() {
-        $nonScalar  = new NonScalarJsonEncode();
-        $formatter  = new RecordFormatter($nonScalar, ["Message" => "{Context.key1}-{Context.key2?default}"]);
-        $record     = Record::createRecord(
+        $nonScalar  = new NonScalarJsonConverter();
+        $formatter  = new LogRecordFormatter($nonScalar, ["Message" => "{Context.key1}-{Context.key2?default}"]);
+        $record     = LogRecord::createRecord(
             "loggerName",
             Logger::DEBUG,
             "logMessage",

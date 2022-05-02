@@ -26,15 +26,20 @@
   <testsuites>
     <testsuite name="all">
       <directory>./tests/Common</directory>
+      <directory>./tests/Channel</directory>
       <directory>./tests/Converter</directory>
       <directory>./tests/Formatter</directory>
       <directory>./tests/Handler</directory>
+      <directory>./tests/Record</directory>
       <directory>./tests/Utility</directory>
       <directory>./tests/Writer</directory>
       <directory>./tests/_Examples</directory>
     </testsuite>
     <testsuite name="Common">
       <directory>./tests/Common</directory>
+    </testsuite>
+    <testsuite name="Channel">
+      <directory>./tests/Channel</directory>
     </testsuite>
     <testsuite name="Converter">
       <directory>./tests/Converter</directory>
@@ -44,6 +49,9 @@
     </testsuite>
     <testsuite name="Handler">
       <directory>./tests/Handler</directory>
+    </testsuite>
+    <testsuite name="Record">
+      <directory>./tests/Record</directory>
     </testsuite>
     <testsuite name="Utility">
       <directory>./tests/Utility</directory>

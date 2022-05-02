@@ -1,6 +1,6 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-interface ILoggerFilter {
+interface LogHandlerFilterInterface {
     public function isHandling(string $callerNamespace) : bool;
 }

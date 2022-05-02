@@ -1,16 +1,16 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\_Mocks;
 
-use Terrazza\Component\Logger\Channel;
-use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
+use Terrazza\Component\Logger\Channel\Channel;
+use Terrazza\Component\Logger\Formatter\LogRecordFormatter;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
-use Terrazza\Component\Logger\IChannelHandler;
-use Terrazza\Component\Logger\IChannel;
-use Terrazza\Component\Logger\Formatter\RecordFormatter;
-use Terrazza\Component\Logger\Handler\SingleHandler;
-use Terrazza\Component\Logger\IHandler;
-use Terrazza\Component\Logger\ILoggerFilter;
-use Terrazza\Component\Logger\Writer\StreamFile;
+use Terrazza\Component\Logger\ChannelInterface;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonConverter;
+use Terrazza\Component\Logger\ChannelHandlerInterface;
+use Terrazza\Component\Logger\Handler\LogHandler;
+use Terrazza\Component\Logger\LogHandlerInterface;
+use Terrazza\Component\Logger\LogHandlerFilterInterface;
+use Terrazza\Component\Logger\Writer\LogStreamFileWriter;
 
 class HandlerMock {
     CONST stream="tests/Writer/stream.txt";
@@ -28,22 +28,21 @@ class HandlerMock {
         }
     }
 
-    public static function getChannel() : IChannel {
+    public static function getChannel() : ChannelInterface {
         return new Channel(
             "channel",
-            new StreamFile(new FormattedRecordConverterMock(), self::stream),
-            new RecordFormatter(new NonScalarJsonEncode(), [])
+            new LogStreamFileWriter(new FormattedRecordConverterMock(), self::stream),
+            new LogRecordFormatter(new NonScalarJsonConverter(), [])
         );
     }
 
-    public static function getChannelHandler(string $dateFormat="Y-m-d") : IChannelHandler {
-        return new ChannelHandler(self::getChannel($dateFormat));
+    public static function getChannelHandler(LogHandlerInterface ...$logHandler) : ChannelHandlerInterface {
+        return new ChannelHandler(self::getChannel(), ...$logHandler);
     }
 
-    public static function getSingleHandler(int $logLevel, array $format, ?ILoggerFilter $filter=null) : IHandler {
-        return new SingleHandler(
+    public static function getLogHandler(int $logLevel, ?array $format=null, ?LogHandlerFilterInterface $filter=null) : LogHandlerInterface {
+        return new LogHandler(
             $logLevel,
-            self::getChannel(),
             $format,
             $filter
         );

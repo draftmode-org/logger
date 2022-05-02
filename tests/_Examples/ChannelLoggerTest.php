@@ -1,7 +1,6 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\_Examples;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Handler\HandlerPattern;
 use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\Tests\_Mocks\HandlerMock;
 

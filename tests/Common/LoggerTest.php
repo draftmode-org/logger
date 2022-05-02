@@ -1,23 +1,16 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\Common;
 use PHPUnit\Framework\TestCase;
-use Terrazza\Component\Logger\Channel;
-use Terrazza\Component\Logger\Handler\SingleHandler;
-use Terrazza\Component\Logger\IHandler;
+use RuntimeException;
+use Terrazza\Component\Logger\Handler\LogHandler;
 use Terrazza\Component\Logger\Logger;
-use Terrazza\Component\Logger\Tests\_Mocks\FormatterMock;
-use Terrazza\Component\Logger\Tests\_Mocks\WriterMock;
+use Terrazza\Component\Logger\LogHandlerInterface;
+use Terrazza\Component\Logger\Tests\_Mocks\HandlerMock;
 
 class LoggerTest extends TestCase {
-    private function getEmptyHandler(int $logLevel) : IHandler {
-        return new SingleHandler(
-            $logLevel,
-            new Channel(
-                "channel",
-                new WriterMock(),
-                new FormatterMock()
-            ),
-            []
+    private function getEmptyHandler(int $logLevel) : LogHandlerInterface {
+        return new LogHandler(
+            $logLevel
         );
     }
 
@@ -36,19 +29,40 @@ class LoggerTest extends TestCase {
     }
 
     function testHandlerNoHandler() {
-        $logger = (new Logger("loggerName"))->withHandler($this->getEmptyHandler(Logger::ERROR));
+        $logger = (new Logger("loggerName", null,
+            HandlerMock::getChannelHandler($this->getEmptyHandler(Logger::ERROR))
+        ));
         $logger->warning("message");
         $this->assertTrue(true);
     }
 
     function testHandlerNoHandlerWrite() {
-        $logger = (new Logger("loggerName"))->withHandler($this->getEmptyHandler(Logger::ERROR));
+        $logger = (new Logger("loggerName", null,
+            HandlerMock::getChannelHandler($this->getEmptyHandler(Logger::ERROR))
+        ));
         $logger->error("message");
         $this->assertTrue(true);
     }
 
+    function testPushLogHandlerSuccessful() {
+        $channelHandler = HandlerMock::getChannelHandler();
+        $channelName    = $channelHandler->getChannel()->getName();
+        $logger     = new Logger("loggerName", null, $channelHandler);
+        $logger->pushLogHandler($channelName, HandlerMock::getLogHandler(Logger::ERROR));
+        $this->assertTrue(true);
+    }
+
+    function testPushLogHandlerChannelMissingException() {
+        $logger = new Logger("loggerName");
+        $this->expectException(RuntimeException::class);
+        $logger->pushLogHandler("channel", HandlerMock::getLogHandler(Logger::ERROR));
+    }
+
     function testGetters() {
         $logger     = new Logger("loggerName", [$mKey = "mKey" => $mValue = "mValue"]);
+        $logger->registerFatalHandler();
+        $logger->registerErrorHandler();
+        $logger->registerExceptionHandler();
         $this->assertEquals([
             true,
             $mValue,
@@ -61,4 +75,5 @@ class LoggerTest extends TestCase {
             $logger->getContextByKey("unknown"),
         ]);
     }
+
 }

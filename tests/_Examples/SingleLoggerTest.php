@@ -2,7 +2,7 @@
 namespace Terrazza\Component\Logger\Tests\_Examples;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Logger;
-use Terrazza\Component\Logger\LoggerFilter;
+use Terrazza\Component\Logger\LogHandlerFilter;
 use Terrazza\Component\Logger\Tests\_Mocks\HandlerMock;
 
 class SingleLoggerTest extends TestCase {
@@ -31,7 +31,7 @@ class SingleLoggerTest extends TestCase {
     function testWithContext() {
         $logger = (new Logger($loggerName = "loggerName", ["iContent" => $iContent = "content"]))
             ->withHandler(HandlerMock::getSingleHandler(
-            Logger::WARNING,
+                Logger::WARNING,
             ["LoggerName", "Level", "Message", "Context.iContent", "Context.wContent"]
         ));
         $logger->warning($message = "message", ["wContent" => $wContent = "content"]);
@@ -46,7 +46,7 @@ class SingleLoggerTest extends TestCase {
             ->withHandler(HandlerMock::getSingleHandler(
                 Logger::WARNING,
                 ["LoggerName", "Level", "Message", "Context.iContent", "Context.wContent"],
-                new LoggerFilter(["unknownNamespace"])
+                new LogHandlerFilter(["unknownNamespace"])
             ));
         $logger->warning("message");
         $this->assertNull(HandlerMock::getContent());

@@ -2,7 +2,7 @@
 
 namespace Terrazza\Component\Logger;
 
-class LoggerFilter implements ILoggerFilter {
+class LogHandlerFilter implements LogHandlerFilterInterface {
     private ?array $include;
     private ?array $exclude;
     private ?array $start;
