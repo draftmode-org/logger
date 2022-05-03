@@ -10,6 +10,7 @@ use Terrazza\Component\Logger\ChannelHandlerInterface;
 use Terrazza\Component\Logger\Handler\LogHandler;
 use Terrazza\Component\Logger\LogHandlerInterface;
 use Terrazza\Component\Logger\LogHandlerFilterInterface;
+use Terrazza\Component\Logger\Record\LogRecord;
 use Terrazza\Component\Logger\Writer\LogStreamFileWriter;
 
 class HandlerMock {
@@ -20,24 +21,24 @@ class HandlerMock {
     public static function tearDown(): void {
         @unlink(self::stream);
     }
-    public static function getContent() :?string {
-        if (file_exists(self::stream)) {
-            return trim(file_get_contents(self::stream));
+    public static function getContent(string $stream=null) :?string {
+        if (file_exists($stream ?? self::stream)) {
+            return trim(file_get_contents($stream ?? self::stream));
         } else {
             return null;
         }
     }
 
-    public static function getChannel() : ChannelInterface {
+    public static function getChannel(?array $format=null, string $stream=null) : ChannelInterface {
         return new Channel(
             "channel",
-            new LogStreamFileWriter(new FormattedRecordConverterMock(), self::stream),
-            new LogRecordFormatter(new NonScalarJsonConverter(), [])
+            new LogStreamFileWriter(new FormattedRecordConverterMock(), $stream ?? self::stream),
+            new LogRecordFormatter(new NonScalarJsonConverter(), $format ?? ["LoggerName", "Level", "Message"])
         );
     }
 
-    public static function getChannelHandler(LogHandlerInterface ...$logHandler) : ChannelHandlerInterface {
-        return new ChannelHandler(self::getChannel(), ...$logHandler);
+    public static function getChannelHandler(?array $format=null) : ChannelHandlerInterface {
+        return new ChannelHandler(self::getChannel($format));
     }
 
     public static function getLogHandler(int $logLevel, ?array $format=null, ?LogHandlerFilterInterface $filter=null) : LogHandlerInterface {

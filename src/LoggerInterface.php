@@ -1,12 +1,14 @@
 <?php
 namespace Terrazza\Component\Logger;
 use Psr\Log\LoggerInterface as PsrLoggerInterface;
+use Throwable;
 
 interface LoggerInterface extends PsrLoggerInterface {
-    /**
-     *
-     */
     public function registerExceptionHandler() : void;
+    /**
+     * @param Throwable $exception
+     */
+    public function handleException(Throwable $exception) : void;
 
     /**
      * @param int $errorTypes
@@ -17,12 +19,24 @@ interface LoggerInterface extends PsrLoggerInterface {
      * @param int $display_errors
      */
     public function registerFatalHandler(int $display_errors=0) : void;
+    public function handleFatalError() : void;
+
+    /**
+     * @param string $exceptionFileName
+     */
+    public function setExceptionFileName(string $exceptionFileName) : void;
 
     /**
      * @param ChannelHandlerInterface $channelHandler
      * @return LoggerInterface
      */
-    public function registerChannel(ChannelHandlerInterface $channelHandler) : LoggerInterface;
+    public function registerChannelHandler(ChannelHandlerInterface $channelHandler) : LoggerInterface;
+
+    /**
+     * @param string $channelName
+     * @return ChannelHandlerInterface|null
+     */
+    public function getChannelHandler(string $channelName) :?ChannelHandlerInterface;
 
     /**
      * @param string $channelName
@@ -30,16 +44,4 @@ interface LoggerInterface extends PsrLoggerInterface {
      * @return LoggerInterface
      */
     public function pushLogHandler(string $channelName, LogHandlerInterface $logHandler) : LoggerInterface;
-
-    /**
-     * @param string $key
-     * @return bool
-     */
-    public function hasContextKey(string $key) : bool;
-
-    /**
-     * @param string $key
-     * @return mixed
-     */
-    public function getContextByKey(string $key);
 }

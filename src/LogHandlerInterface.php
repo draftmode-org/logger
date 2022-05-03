@@ -20,17 +20,6 @@ interface LogHandlerInterface {
     public function getFilter() :?LogHandlerFilterInterface;
 
     /**
-     * @param LogRecordFormatterInterface $formatter
-     * @return LogHandlerInterface
-     */
-    public function setFormatter(LogRecordFormatterInterface $formatter) : LogHandlerInterface;
-
-    /**
-     * @return LogRecordFormatterInterface
-     */
-    public function getFormatter() : LogRecordFormatterInterface;
-
-    /**
      * @param LogRecord $record
      * @return bool
      */

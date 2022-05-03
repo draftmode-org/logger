@@ -4,6 +4,7 @@ namespace Terrazza\Component\Logger\Handler;
 
 use Terrazza\Component\Logger\ChannelHandlerInterface;
 use Terrazza\Component\Logger\ChannelInterface;
+use Terrazza\Component\Logger\LogRecordFormatterInterface;
 use Terrazza\Component\Logger\Record\LogRecord;
 use Terrazza\Component\Logger\LogHandlerInterface;
 
@@ -37,7 +38,6 @@ class ChannelHandler implements ChannelHandlerInterface {
      */
     public function pushLogHandler(LogHandlerInterface $logHandler) : void {
         $logLevel                                   = $logHandler->getLogLevel();
-        $logHandler                                 = $logHandler->setFormatter($this->channel->getFormatter());
         $this->logHandler[$logLevel]                = $logHandler;
         $this->sortLogHandler();
     }
@@ -48,15 +48,36 @@ class ChannelHandler implements ChannelHandlerInterface {
 
     /**
      * @param LogRecord $record
+     * @return LogHandlerInterface|null
      */
-    public function handleRecord(LogRecord $record): void {
+    public function getEffectedHandler(LogRecord $record) :?LogHandlerInterface {
         foreach ($this->logHandler as $handler) {
             if ($handler->isHandling($record)) {
-                $this->channel->getWriter()->write(
-                    $handler->getFormatter()->formatRecord($record)
-                );
-                break;
+                return $handler;
             }
         }
+        return null;
+    }
+
+    /**
+     * @param LogHandlerInterface $handler
+     * @return LogRecordFormatterInterface
+     */
+    private function getHandlerFormatter(LogHandlerInterface $handler) : LogRecordFormatterInterface {
+        if ($format = $handler->getFormat()) {
+            return $this->channel->getFormatter()->withFormat($format);
+        } else {
+            return $this->channel->getFormatter();
+        }
+    }
+
+    /**
+     * @param LogHandlerInterface $handler
+     * @param LogRecord $record
+     */
+    public function writeRecord(LogHandlerInterface $handler, LogRecord $record): void {
+        $this->channel->getWriter()->write(
+            $this->getHandlerFormatter($handler)->formatRecord($record)
+        );
     }
 }

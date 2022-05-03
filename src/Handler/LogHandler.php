@@ -10,7 +10,6 @@ class LogHandler implements LogHandlerInterface {
     private int $logLevel;
     private ?array $format;
     private ?LogHandlerFilterInterface $filter;
-    private ?LogRecordFormatterInterface $formatter=null;
     public function __construct(int $logLevel, ?array $format=null, ?LogHandlerFilterInterface $filter=null) {
         $this->logLevel 							= $logLevel;
         $this->format                               = $format;
@@ -36,23 +35,6 @@ class LogHandler implements LogHandlerInterface {
      */
     public function getFilter() :?LogHandlerFilterInterface {
         return $this->filter;
-    }
-
-    /**
-     * @param LogRecordFormatterInterface $formatter
-     * @return LogHandlerInterface
-     */
-    public function setFormatter(LogRecordFormatterInterface $formatter) : LogHandlerInterface {
-        $logHandler                                 = clone $this;
-        $logHandler->formatter                      = $this->format ? $formatter->withFormat($this->format) : $formatter;
-        return $logHandler;
-    }
-
-    /**
-     * @return LogRecordFormatterInterface
-     */
-    public function getFormatter() : LogRecordFormatterInterface {
-        return $this->formatter;
     }
 
     /**

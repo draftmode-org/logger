@@ -10,17 +10,19 @@ interface ChannelHandlerInterface {
     public function getChannel() : ChannelInterface;
 
     /**
-     * @return LogHandlerInterface[]
-     */
-    public function getLogHandler() : array;
-
-    /**
      * @param LogHandlerInterface $logHandler
      */
     public function pushLogHandler(LogHandlerInterface $logHandler) : void;
 
     /**
      * @param LogRecord $record
+     * @return LogHandlerInterface|null
      */
-    public function handleRecord(LogRecord $record): void;
+    public function getEffectedHandler(LogRecord $record) :?LogHandlerInterface;
+
+    /**
+     * @param LogHandlerInterface $handler
+     * @param LogRecord $record
+     */
+    public function writeRecord(LogHandlerInterface $handler, LogRecord $record): void;
 }

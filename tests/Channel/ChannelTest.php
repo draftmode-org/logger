@@ -15,11 +15,13 @@ class ChannelTest extends TestCase {
         $this->assertEquals([
             $channelName,
             $writer,
-            $formatter
+            $formatter,
+            null
         ],[
             $channel->getName(),
             $channel->getWriter(),
-            $channel->getFormatter()
+            $channel->getFormatter(),
+            $channel->getFilter()
         ]);
     }
 }

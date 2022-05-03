@@ -13,7 +13,7 @@ class LogRecordFormatter implements LogRecordFormatterInterface {
     private CONST typeSafe = "t-y-p-e-s-a-v-e";
     private CONST defaultChar = "?";
 
-    public function __construct(NonScalarConverterInterface $nonScalarConverter, array $format=null) {
+    public function __construct(NonScalarConverterInterface $nonScalarConverter, array $format) {
         $this->nonScalarConverter 					= $nonScalarConverter;
         $this->format 								= $format;
     }

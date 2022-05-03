@@ -38,7 +38,7 @@ class Logger implements LoggerInterface {
     /**
      * @var string
      */
-    private string $exceptionFile                   = "php://stderr";
+    private string $exceptionFileName               = "php://stderr";
 
     /**
      * @param string $loggerName
@@ -49,7 +49,7 @@ class Logger implements LoggerInterface {
         $this->loggerName                           = $loggerName;
         $this->context                              = $context ?? [];
         foreach ($channelHandler as $handler) {
-            $this->registerChannel($handler);
+            $this->registerChannelHandler($handler);
         }
     }
 
@@ -57,10 +57,22 @@ class Logger implements LoggerInterface {
      * @param ChannelHandlerInterface $channelHandler
      * @return LoggerInterface
      */
-    public function registerChannel(ChannelHandlerInterface $channelHandler) : LoggerInterface {
+    public function registerChannelHandler(ChannelHandlerInterface $channelHandler) : LoggerInterface {
         $channelName                                = $channelHandler->getChannel()->getName();
         $this->channel[$channelName]                = $channelHandler;
         return $this;
+    }
+
+    /**
+     * @param string $channelName
+     * @return ChannelHandlerInterface|null
+     */
+    public function getChannelHandler(string $channelName) :?ChannelHandlerInterface {
+        if (array_key_exists($channelName, $this->channel)) {
+            return $this->channel[$channelName];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -101,10 +113,10 @@ class Logger implements LoggerInterface {
     }
 
     /**
-     * @param string $exceptionFile
+     * @param string $exceptionFileName
      */
-    public function setExceptionFile(string $exceptionFile) : void {
-        $this->exceptionFile                    = $exceptionFile;
+    public function setExceptionFileName(string $exceptionFileName) : void {
+        $this->exceptionFileName                    = $exceptionFileName;
     }
 
     /**
@@ -154,38 +166,6 @@ class Logger implements LoggerInterface {
     }
 
     /**
-     * @param string $key
-     * @return bool
-     */
-    public function hasContextKey(string $key) : bool {
-        $token                                      = $this->context;
-        foreach (explode(".", $key) as $tokenKey) {
-            if (array_key_exists($tokenKey, $token)) {
-                $token								= $token[$tokenKey];
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @param string $key
-     * @return mixed
-     */
-    public function getContextByKey(string $key) {
-        $token                                      = $this->context;
-        foreach (explode(".", $key) as $tokenKey) {
-            if (array_key_exists($tokenKey, $token)) {
-                $token								= $token[$tokenKey];
-            } else {
-                return null;
-            }
-        }
-        return $token;
-    }
-
-    /**
      * @param int $logLevel
      * @param $message
      * @param array $context
@@ -207,13 +187,16 @@ class Logger implements LoggerInterface {
 
         try {
             foreach ($this->channel as $channelHandler) {
-                $channelHandler->handleRecord($record);
+                if ($logHandler = $channelHandler->getEffectedHandler($record)) {
+                    $channelHandler->writeRecord($logHandler, $record);
+                }
             }
         } catch (Throwable $exception) {
-            @file_put_contents($this->exceptionFile, join(" ", [
+            file_put_contents($this->exceptionFileName, join(" ", [
                 (new \DateTime())->format("Y-m-d H:i:s.u"),
                 "[".self::$levels[self::EMERGENCY]."]",
-                $exception->getMessage()
+                $exception->getMessage().PHP_EOL.
+                $exception->getTraceAsString()
             ]), FILE_APPEND);
         }
     }

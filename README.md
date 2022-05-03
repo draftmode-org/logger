@@ -3,18 +3,22 @@ This component is an implementation of PSR/Log standard with some extensions.
 
 1. Object/Classes
    1. [Logger](#object-logger) 
-      1. [method: withHandler](#object-logger-withhandler)
-      2. [Context](#object-logger-context)
-         1. method: hasContextKey
-         2. method: getContextByKey
-   2. [Record](#object-record)
-   3. [LoggerFilter](#object-logger-filter)
-   4. [Formatter](#object-formatter)
-   5. Writer
+      1. [method: registerChannelHandler](#object-logger-registerChannelHandler)
+      2. [method: getChannelHandler](#object-logger-getChannelHandler)
+      3. [method: pushLogHandler](#object-logger-pushLogHandler)
+      4. [method: registerExceptionHandler](#object-logger-registerExceptionHandler)
+      5. [method: registerErrorHandler](#object-logger-registerErrorHandler)
+      6. [method: registerFatalHandler](#object-logger-registerFatalHandler)
+      7. [method: setExceptionFileName](#object-logger-setExceptionFileName)
+      8. [constructor: context (array)](#object-logger-constructor-context)
+   2. [LogRecord](#object-record)
+   3. [LogRecordFormatter](#object-log-record-formatter)
+   4. Writer
       1. [StreamFile](#object-writer-stream-file)
-   6. Handler
+   5. Handler
       1. [ChannelHandler](#object-channel-handler)
-      2. [SingleHandler](#object-single-handler)
+      2. [LogHandler](#object-log-handler)
+   6. [LogHandlerFilter](#object-log-handler-filter)
    7. [Converter](#object-converter)
 3. [Install](#install)
 4. [Requirements](#require)
@@ -25,17 +29,61 @@ This component is an implementation of PSR/Log standard with some extensions.
 <a id="object-logger" name="object-logger"></a>
 <a id="user-content-object-logger" name="user-content-object-logger"></a>
 ### Logger
-The Logger object provides 3 more properties than the common PSR implementations.
-- context
+The Logger object is close to a common PSR implementations but!<br>
+The hierarchy / relation for using the Logger::addMessage() method is:<br>
+1. Logger has a couple of channelHandlers.<br>
+2. Each channelHandler
+   1. is configured with a Writer
+   2. is configured with a Formatter
+   3. implements a couple of LogHandler
+>each channelHandler executes only one logHandler
 
-<a id="object-logger-withhandler" name="object-logger-withhandler"></a>
-<a id="user-content-object-logger-withhandler" name="user-content-object-logger-withhandler"></a>
-#### method: withHandler
-fulfill the same as pushHandler, but as immutable
+Additional methods to the common PSR implementation are:
 
-<a id="object-logger-context" name="object-logger-context"></a>
-<a id="user-content-object-logger-context" name="user-content-object-logger-context"></a>
-#### context
+<a id="object-logger-registerChannelHandler" name="object-logger-registerChannelHandler"></a>
+<a id="user-content-object-logger-registerChannelHandler" name="user-content-object-logger-registerChannelHandler"></a>
+#### method: registerChannelHandler
+adds a channelHandler to logger (immutable).<br>
+>notice<br>
+The channel.name is used as a unique identifier for the channel collection.
+
+<a id="object-logger-getChannelHandler" name="object-logger-getChannelHandler"></a>
+<a id="user-content-object-logger-getChannelHandler" name="user-content-object-logger-getChannelHandler"></a>
+#### method: getChannelHandler
+returns a ChannelHandler by name, if already registered.
+
+<a id="object-logger-pushLogHandler" name="object-logger-pushLogHandler"></a>
+<a id="user-content-object-logger-pushLogHandler" name="user-content-object-logger-pushLogHandler"></a>
+#### method: pushLogHandler
+adds a logHandler to a given channelHandler (byName).<br>
+Throws an Exception if given channel.name is not registered.
+
+<a id="object-logger-registerExceptionHandler" name="object-logger-registerExceptionHandler"></a>
+<a id="user-content-object-logger-registerExceptionHandler" name="user-content-object-logger-registerExceptionHandler"></a>
+#### method: registerExceptionHandler
+set_exception_handler
+
+<a id="object-logger-registerErrorHandler" name="object-logger-registerErrorHandler"></a>
+<a id="user-content-object-logger-registerErrorHandler" name="user-content-object-logger-registerErrorHandler"></a>
+#### method: registerErrorHandler
+set_error_handler
+
+<a id="object-logger-registerFatalHandler" name="object-logger-registerFatalHandler"></a>
+<a id="user-content-object-logger-registerFatalHandler" name="user-content-object-logger-registerFatalHandler"></a>
+#### method: registerFatalHandler
+register_shutdown_function
+
+<a id="object-logger-setExceptionFileName" name="object-logger-setExceptionFileName"></a>
+<a id="user-content-object-logger-setExceptionFileName" name="user-content-object-logger-setExceptionFileName"></a>
+#### method: setExceptionFileName
+The addMessage method itself is protected with try/catch.<br>
+The catch handler writes the Exception.Message to a file which can be set with the method setExceptionFileName.<br>
+>notice:<br>
+default: php://stderr
+
+<a id="object-logger-constructor-context" name="object-logger-constructor-context"></a>
+<a id="user-content-object-logger-constructor-context" name="user-content-object-logger-constructor-context"></a>
+#### constructor: context (array)
 the logger can be initialized, next to the name, with an initialized context.<br>
 the context will be merged with the e.g. error(message, ["key" => "value"]).<br>
 
@@ -56,50 +104,30 @@ $logger->notice("hello", ["my" => "value"]);
 */
 ```
 
-##### method: hasContextKey
-validate if given key exists in the initialized context.<br>
-with a DOT inside the key you can walk through the array.<br>
-```
-$logger = new Logger("name", ["user" => ["name" => "Max"]]);
-$logger->hasContextKey("user"); // true
-$logger->hasContextKey("email"); // false
-$logger->hasContextKey("user.name"); // true
-$logger->hasContextKey("user.email"); // false
-```
-##### method: getContextValue
-returns the initialized context value by a given key.<br>
-with a DOT inside the key you can walk through the array.<br>
-```
-$logger = new Logger("name", ["user" => ["name" => "Max"]]);
-$logger->getContextByKey("user"); // ["name" => "Max"]
-$logger->getContextByKey("email"); // null
-$logger->getContextByKey("user.name"); // Max
-$logger->getContextByKey("user.email"); // null
-```
-
 <a id="object-record" name="object-record"></a>
 <a id="user-content-object-record" name="user-content-object-record"></a>
-### Record
+### LogRecord
 Against the common PSR implementation our component deals with an object and not an array.<br>
 LogRecord properties:
-- Date (\Datetime)
-- Level (int)
-- LevelName (string)
-- LoggerName (string) 
-- MemUsed (int)
-- MemAllocated (int)
-- Message (string)
-- Context (array)
+- logDate (\Datetime)
+- loggerName (string)
+- logLevel (int)
+- logMessage (string)
+- context (array)
+- memUsed (int)
+- memAllocated (int)
+
+additional, and optional properties:
+- traceNamespace
+- traceMethod
+- traceLine
 
 #### method/static createRecord
 this method is used inside <i>Logger</i> to create a new LogRecord object.
 
 #### method: getToken()
-this method is used in the <i>Formatter</i> to get the record "encoded".
-Every element can be accessed through the "format" e.g. {Level}{LevelName}{Context.name}<br>
-
-**Namespace and sNamespace**:<br>
-(s)Namespace returns/includes the callerNamespace.<br>
+this method is used in the <i>LogRecordFormatterInterface</i> to get the LogRecord "encoded".
+Every element can be accessed through his "format" e.g. {Level}{LevelName}{Context.name}<br>
 
 ```
 return [
@@ -117,10 +145,10 @@ return [
   'Context'      => $this->getContext(),
 ]
 ```
-<a id="object-logger-filter" name="object-logger-filter"></a>
-<a id="user-content-object-logger-filter" name="user-content-object-logger-filter"></a>
-### LoggerFilter
-[ChannelHandler](object-channel-handler) and [SingleHandler](object-single-handler) can have a LoggerFilter.<br>
+<a id="object-log-handler-filter" name="object-log-handler-filter"></a>
+<a id="user-content-object-log-handler-filter" name="user-content-object-log-handler-filter"></a>
+### LogHandlerFilter
+[LogHandler](object-log-handler) can have a LogHandlerFilter.<br>
 Properties:
 - include (array, optional)
 - exclude (array, optional)
@@ -135,16 +163,17 @@ preg_match callerNamespace against start patterns<br>
 if preg_match is true all further isHandling will be true.
 _(exclude filter overrules start)_
 
-<a id="object-formatter" name="object-formatter"></a>
-<a id="user-content-object-formatter" name="user-content-object-formatter"></a>
-### RecordFormatter
-The RecordFormatter converts/maps a record to an array<br>
-- NonScalarConverter
+<a id="object-log-record-formatter" name="object-log-record-formatter"></a>
+<a id="user-content-object-log-record-formatter" name="user-content-object-log-record-formatter"></a>
+### LogRecordFormatter
+The LogRecordFormatter converts/maps a record to an array<br>.
+Initialized properties:
+- NonScalarConverterInterface
 - format (array)
 <br>
 ``["Date", "Message"]``
 
-#### NonScalarConverter (INonScalarConverter)
+#### NonScalarConverter (NonScalarConverterInterface)
 The NonScalarConverter convert a nonScalar value (e.g. from Context) into a string.<br>
 Actually the provided class _NonScalarJsonEncode_ use json_encode and prefix it with the attribute name.<br>
 <br>
@@ -152,7 +181,7 @@ The NonScalarConverter is used, when a formatter-line includes a nonScalar and a
 
 _example of usage_:<br>
 ```
-use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
+use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonConverter;
 
 $record = ["message" => "myMessage", "key" => ["value1", "value2"]];
 echo (new NonScalarJsonEncode())->getValue($context["key"]); // key:{"value1", "value2"}
@@ -161,20 +190,25 @@ echo (new NonScalarJsonEncode())->getValue($context["key"]); // key:{"value1", "
 $format = ["{Message}:{Context.key}"];                 // ... myMessage:key:{"value1", "value2"}
 $format = ["Context" => "{Message}:{Context.key}"];    // ... myMessage:key:{"value1", "value2"}
 ```
+a ValueConverter (LogRecordValueConverterInterface) can be used to convert special value based on his key.
 
-A ValueConverter (IRecordTokenValueConverter) will be used to convert a value based on a key.
 #### method: withFormat
 Returns a new instance of the formatter but with a different format.<br>
 <br>
 _example of usage_:<br>
 ```
 use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
-use Terrazza\Component\Logger\Formatter\RecordFormatter;
+use Terrazza\Component\Logger\Formatter\LogRecordFormatter;
 
 $nonScalar = new NonScalarJsonEncode();
-$formatter = new RecordFormatter($nonScalar, ["Message" => "{Message}"];
+$formatter = new LogRecordFormatter($nonScalar, ["Message" => "{Message}"];
 $nformatter = $formatter->withFormat(["Message" => "{Message}:{Date}"]);
 ```
+
+#### method: pushConverter
+to map/convert a special value, based on his key, push a special converter.<br>
+This converter has to fulfill LogRecordValueConverterInterface. 
+
 #### method: formatRecord
 Maps the Record against the $format and returns a mapped array.<br>
 Unknown patterns (e.g. {undefined}) are removed from the response.<br>
@@ -184,12 +218,12 @@ Empty "Lines" are also removed.
 The example uses an additional ValueConverter for the Record value "Date".
 ````
 use DateTime;
-use Terrazza\Component\Logger\IRecordValueConverter;
-use Terrazza\Component\Logger\Record;
-use Terrazza\Component\Logger\Formatter\RecordFormatter;
+use Terrazza\Component\Logger\LogRecordValueConverterInterface;
+use Terrazza\Component\Logger\LOgRecord;
+use Terrazza\Component\Logger\Formatter\LogRecordFormatter;
 use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonEncode;
 
-class RecordTokenValueDate implements IRecordValueConverter {
+class RecordTokenValueDate implements LogRecordValueConverterInterface {
     private string $dateFormat;
     public function __construct(string $dateFormat="Y-m-d H:i:s.u") {
         $this->dateFormat                           = $dateFormat;
@@ -199,13 +233,13 @@ class RecordTokenValueDate implements IRecordValueConverter {
     }
 }
 
-$formatter = new RecordFormatter(
+$formatter = new LogRecordFormatter(
    new NonScalarJsonEncode,
    ["Date", "Message"]
 );
 $formatter->pushConverter("Date", new RecordTokenValueDate);   
 
-$record  = Record::create("LoggerName", 100, "myMessage");
+$record  = LogRecord::create("LoggerName", 100, "myMessage");
 var_dump($formatter->formatRecord($record)); 
 /*
 [
@@ -216,28 +250,30 @@ var_dump($formatter->formatRecord($record));
 ````
 
 ### Handler
-There are two different types of handler provided. In any case a handler is the interactor for the logger to write a record.
-
 <a id="object-channel-handler" name="object-channel-handler"></a>
 <a id="user-content-object-channel-handler" name="user-content-object-channel-handler"></a>
 #### ChannelHandler
-the ChannelHandler allows us to collect handler to the same channel. He takes care about, that every handler has 
-- the same formatter
-- the same writer
-To use the channelHandler as a Logger itself he implements the IHandler-Methods, too.
+the ChannelHandler collects LogHandler to the same channel and provides the same 
+- Channel (writer + formatter)
+for each LogHandler.
 
-##### method: pushHandler
-Method to add a new Handler for a given LogLevel and format.
+the channelHandler can be pushed/initialized into the Logger. 
 
-##### method: isHandling
-Business logic to validate if any handler has to be used for a given Record<br>
+##### method: getChannel (ChannelInterface)
+##### method: getLogHandler (array)
+##### method: pushLogHandler
+Method to add a new LogHandler. After a push the logHandler-array is key-sorted.<br>
+This key-sort is important to prevent multiple write transaction for different LogLevels.
+
+##### method: getEffectedHandler
+each logHandler is verified (method: isHandling(LogRecord)) if he matches for the given LogRecord. 
 
 ##### method: writeRecord
-all Handlers pushed to this channel will be used ($handler->writeRecord), if the handler::isHandling matches.
+for a passed logHandler the record will be written to the LogWriter initialized in the ChannelHandler itself.
 
-<a id="object-single-handler" name="object-single-handler"></a>
-<a id="user-content-object-single-handler" name="user-content-object-single-handler"></a>
-#### SingleHandler
+<a id="object-log-handler" name="object-log-handler"></a>
+<a id="user-content-object-log-handler" name="user-content-object-log-handler"></a>
+#### LogHandler
 The SingleHandler provides the common way to create a handler for a Logger.
 The only difference to the common implementation: 
 - instead of logLevel
@@ -299,8 +335,8 @@ arguments:
 - filename (string required)
 - flags (int, optional, default: 0)
 
-_notice:<br>
-The Converter should convert the formatted LogRecord into a string._<br> 
+>notice:<br>
+The Converter should convert the formatted LogRecord into a string. 
  
 ```
 use Terrazza\Component\Logger\Writer\StreamFile;
@@ -353,8 +389,8 @@ $channel          = new Channel("channelName", $writer, $formatter);
 ```
 ### SingleHandler
 #### setup a handler
-_notice:<br>
-next code lines depends on previous example... (setup a channel)_
+>notice<br>
+next code lines depends on previous example... (setup a channel)
 ```
 use Terrazza\Component\Logger\Handler\SingleHandler;
 use Terrazza\Component\Logger\Logger;
@@ -363,8 +399,8 @@ $handler          = new SingleHandler(Logger::WARNING, $channel);
 ```
 ### Create Logger
 #### create within a handler
-_notice:<br>
-next code lines depends on previous example... (setup a handler)_
+>notice:<br>
+next code lines depends on previous example... (setup a handler)
 ```
 use Terrazza\Component\Logger\Logger;
 
