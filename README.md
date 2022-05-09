@@ -1,44 +1,50 @@
-# the logger component
+# Terrazza/Logger
 This component is an implementation of PSR/Log standard with some extensions.
 
-1. Object/Classes
-   1. [Logger](#object-logger) 
-      1. [method: registerChannelHandler](#object-logger-registerChannelHandler)
-      2. [method: getChannelHandler](#object-logger-getChannelHandler)
-      3. [method: pushLogHandler](#object-logger-pushLogHandler)
-      4. [method: registerExceptionHandler](#object-logger-registerExceptionHandler)
-      5. [method: registerErrorHandler](#object-logger-registerErrorHandler)
-      6. [method: registerFatalHandler](#object-logger-registerFatalHandler)
-      7. [method: setExceptionFileName](#object-logger-setExceptionFileName)
-      8. [constructor: context (array)](#object-logger-constructor-context)
-   2. [LogRecord](#object-record)
-   3. [LogRecordFormatter](#object-log-record-formatter)
-   4. Writer
-      1. [StreamFile](#object-writer-stream-file)
-   5. Handler
-      1. [ChannelHandler](#object-channel-handler)
-      2. [LogHandler](#object-log-handler)
-   6. [LogHandlerFilter](#object-log-handler-filter)
-   7. [Converter](#object-converter)
-3. [Install](#install)
-4. [Requirements](#require)
-5. [Examples](#examples)
+## _Structure_
+1. the [Logger](#object-logger)<br>
+has to be initialized with 0-n [ChannelHandler](#object-channel-handler)<br>
+and provides the common known methods:
+   - warning
+   - error
+   - notice
+   - ...
+2. the [ChannelHandler](#object-channel-handler)<br>
+is responsible for the target/writer and the recordFormatter configuration<br>
+every [ChannelHandler](#object-channel-handler) can have 0-n [LogHandler](#object-log-handler)
+3. the [LogHandler](#object-log-handler)<br>
+determines
+   - the logLevel
+   - the format (optional, default: from ChannelHandler)
 
-## Object/Classes
+## _Object/Classes_
+
+1. [Logger](#object-logger)
+   1. [method: registerChannelHandler](#object-logger-registerChannelHandler)
+   2. [method: getChannelHandler](#object-logger-getChannelHandler)
+   3. [method: pushLogHandler](#object-logger-pushLogHandler)
+   4. [method: registerExceptionHandler](#object-logger-registerExceptionHandler)
+   5. [method: registerErrorHandler](#object-logger-registerErrorHandler)
+   6. [method: registerFatalHandler](#object-logger-registerFatalHandler)
+   7. [method: setExceptionFileName](#object-logger-setExceptionFileName)
+   8. [constructor: context (array)](#object-logger-constructor-context)
+2. Handler
+   1. [ChannelHandler](#object-channel-handler)
+   2. [LogHandler](#object-log-handler)
+3. [LogRecord](#object-record)
+4. [LogRecordFormatter](#object-log-record-formatter)
+5. [LogHandlerFilter](#object-log-handler-filter)
+6. [Converter](#object-converter)
+7. [Install](#install)
+8. [Requirements](#require)
+9. [Examples](#examples)
 
 <a id="object-logger" name="object-logger"></a>
 <a id="user-content-object-logger" name="user-content-object-logger"></a>
 ### Logger
-The Logger object is close to a common PSR implementations but!<br>
-The hierarchy / relation for using the Logger::addMessage() method is:<br>
-1. Logger has a couple of channelHandlers.<br>
-2. Each channelHandler
-   1. is configured with a Writer
-   2. is configured with a Formatter
-   3. implements a couple of LogHandler
+The Logger object/methods is/are close to the common PSR implementations but!<br>
+The Logger is initialized with channelHandler(s) and not Handler<br>
 >each channelHandler executes only one logHandler
-
-Additional methods to the common PSR implementation are:
 
 <a id="object-logger-registerChannelHandler" name="object-logger-registerChannelHandler"></a>
 <a id="user-content-object-logger-registerChannelHandler" name="user-content-object-logger-registerChannelHandler"></a>
@@ -50,33 +56,36 @@ The channel.name is used as a unique identifier for the channel collection.
 <a id="object-logger-getChannelHandler" name="object-logger-getChannelHandler"></a>
 <a id="user-content-object-logger-getChannelHandler" name="user-content-object-logger-getChannelHandler"></a>
 #### method: getChannelHandler
-returns a ChannelHandler by name, if already registered.
+returns a [ChannelHandler](#object-channel-handler) by name, if already registered.
 
 <a id="object-logger-pushLogHandler" name="object-logger-pushLogHandler"></a>
 <a id="user-content-object-logger-pushLogHandler" name="user-content-object-logger-pushLogHandler"></a>
 #### method: pushLogHandler
-adds a logHandler to a given channelHandler (byName).<br>
+adds a [LogHandler](#object-log-handler) to a given [ChannelHandler](#object-channel-handler) (byName).<br>
 Throws an Exception if given channel.name is not registered.
 
 <a id="object-logger-registerExceptionHandler" name="object-logger-registerExceptionHandler"></a>
 <a id="user-content-object-logger-registerExceptionHandler" name="user-content-object-logger-registerExceptionHandler"></a>
 #### method: registerExceptionHandler
-set_exception_handler
+register a callback for php exception handler.<br>
+>well-developed projects should handle/cover all exceptions by themselves, but ;-)
 
 <a id="object-logger-registerErrorHandler" name="object-logger-registerErrorHandler"></a>
 <a id="user-content-object-logger-registerErrorHandler" name="user-content-object-logger-registerErrorHandler"></a>
 #### method: registerErrorHandler
-set_error_handler
+register a callback for php error handler.<br>
+>sometime this kind of errors can't be catched without this workaround
 
 <a id="object-logger-registerFatalHandler" name="object-logger-registerFatalHandler"></a>
 <a id="user-content-object-logger-registerFatalHandler" name="user-content-object-logger-registerFatalHandler"></a>
 #### method: registerFatalHandler
-register_shutdown_function
+register a callback for php shutdown.<br>
+>sometime this kind of errors can't be catched without this workaround
 
 <a id="object-logger-setExceptionFileName" name="object-logger-setExceptionFileName"></a>
 <a id="user-content-object-logger-setExceptionFileName" name="user-content-object-logger-setExceptionFileName"></a>
 #### method: setExceptionFileName
-The addMessage method itself is protected with try/catch.<br>
+The method:addMessage itself is covered with try/catch.<br>
 The catch handler writes the Exception.Message to a file which can be set with the method setExceptionFileName.<br>
 >notice:<br>
 default: php://stderr
@@ -85,7 +94,7 @@ default: php://stderr
 <a id="user-content-object-logger-constructor-context" name="user-content-object-logger-constructor-context"></a>
 #### constructor: context (array)
 the logger can be initialized, next to the name, with an initialized context.<br>
-the context will be merged with the e.g. error(message, ["key" => "value"]).<br>
+This context will be merged with the e.g. error(message, ["key" => "value"]).<br>
 
 <i>example of usage</i><br>
 a class is injected with the component and inside the constructor<br>
@@ -96,13 +105,44 @@ $logger->notice("hello", ["my" => "value"]);
 /* Record.Context will now include both: 
 - the pushed context for the message
 - the initialzed context
-
 [
 "user" => "user", 
 "my" => "value"
 ]
 */
 ```
+### Handler
+<a id="object-channel-handler" name="object-channel-handler"></a>
+<a id="user-content-object-channel-handler" name="user-content-object-channel-handler"></a>
+#### ChannelHandler
+A ChannelHandler collect [LogHandler](#object-log-handler) to the same channel and provides
+- the same writer
+- the same formatter<br>
+for each [LogHandler](#object-log-handler).
+
+A ChannelHandler can be registered through the [Logger](#object-logger) with [method: registerChannelHandler](#object-logger-registerChannelHandler).
+
+##### method: getChannel (ChannelInterface)
+##### method: getLogHandler (array)
+##### method: pushLogHandler
+Method to add a new [LogHandler](#object-log-handler). After pushing a new [LogHandler](#object-log-handler) logHandler-array will be key-sorted.<br>
+This key-sort is important to prevent multiple write transaction for different LogLevels.
+
+##### method: getEffectedHandler
+return the matched [LogHandler](#object-log-handler) for a given LogRecord.
+
+##### method: writeRecord
+for a passed [LogHandler](#object-log-handler) the record will be
+- formatted
+- and written to the Writer
+
+<a id="object-log-handler" name="object-log-handler"></a>
+<a id="user-content-object-log-handler" name="user-content-object-log-handler"></a>
+#### LogHandler
+The SingleHandler provides the common way to create a handler for a Logger.
+The only difference to the common implementation:
+- instead of logLevel
+- the SingleHandler has to be injected within a [Channel](#object-channel)
 
 <a id="object-record" name="object-record"></a>
 <a id="user-content-object-record" name="user-content-object-record"></a>
@@ -145,24 +185,6 @@ return [
   'Context'      => $this->getContext(),
 ]
 ```
-<a id="object-log-handler-filter" name="object-log-handler-filter"></a>
-<a id="user-content-object-log-handler-filter" name="user-content-object-log-handler-filter"></a>
-### LogHandlerFilter
-[LogHandler](object-log-handler) can have a LogHandlerFilter.<br>
-Properties:
-- include (array, optional)
-- exclude (array, optional)
-- start (array, optional)
-#### method: isHandling (string $callerNamespace) : bool
-**include**<br>
-preg_match callerNamespace against include patterns<br>
-**exclude**<br>
-preg_match callerNamespace against exclude patterns<br>
-**start**<br>
-preg_match callerNamespace against start patterns<br>
-if preg_match is true all further isHandling will be true.
-_(exclude filter overrules start)_
-
 <a id="object-log-record-formatter" name="object-log-record-formatter"></a>
 <a id="user-content-object-log-record-formatter" name="user-content-object-log-record-formatter"></a>
 ### LogRecordFormatter
@@ -248,36 +270,23 @@ var_dump($formatter->formatRecord($record));
 ]
 */
 ````
-
-### Handler
-<a id="object-channel-handler" name="object-channel-handler"></a>
-<a id="user-content-object-channel-handler" name="user-content-object-channel-handler"></a>
-#### ChannelHandler
-the ChannelHandler collects LogHandler to the same channel and provides the same 
-- Channel (writer + formatter)
-for each LogHandler.
-
-the channelHandler can be pushed/initialized into the Logger. 
-
-##### method: getChannel (ChannelInterface)
-##### method: getLogHandler (array)
-##### method: pushLogHandler
-Method to add a new LogHandler. After a push the logHandler-array is key-sorted.<br>
-This key-sort is important to prevent multiple write transaction for different LogLevels.
-
-##### method: getEffectedHandler
-each logHandler is verified (method: isHandling(LogRecord)) if he matches for the given LogRecord. 
-
-##### method: writeRecord
-for a passed logHandler the record will be written to the LogWriter initialized in the ChannelHandler itself.
-
-<a id="object-log-handler" name="object-log-handler"></a>
-<a id="user-content-object-log-handler" name="user-content-object-log-handler"></a>
-#### LogHandler
-The SingleHandler provides the common way to create a handler for a Logger.
-The only difference to the common implementation: 
-- instead of logLevel
-- the SingleHandler has to be injected within a [Channel](#object-channel)
+<a id="object-log-handler-filter" name="object-log-handler-filter"></a>
+<a id="user-content-object-log-handler-filter" name="user-content-object-log-handler-filter"></a>
+### LogHandlerFilter
+[LogHandler](object-log-handler) can have a LogHandlerFilter.<br>
+Properties:
+- include (array, optional)
+- exclude (array, optional)
+- start (array, optional)
+#### method: isHandling (string $callerNamespace) : bool
+**include**<br>
+preg_match callerNamespace against include patterns<br>
+**exclude**<br>
+preg_match callerNamespace against exclude patterns<br>
+**start**<br>
+preg_match callerNamespace against start patterns<br>
+if preg_match is true all further isHandling will be true.
+_(exclude filter overrules start)_
 
 <a id="object-converter" name="object-converter"></a>
 <a id="user-content-object-converter" name="user-content-object-converter"></a>
@@ -363,8 +372,7 @@ composer require terrazza/logger
 <a id="require" name="require"></a>
 <a id="user-content-require" name="user-content-require"></a>
 ## Requirements
-### php version
-- \>= 7.4
+- php >= 7.4
 ### composer packages
 - psr/log
 
