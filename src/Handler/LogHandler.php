@@ -50,7 +50,7 @@ class LogHandler implements LogHandlerInterface {
              * Handler-/ChannelFilter
              */
             if ($this->filter) {
-                return $this->filter->isHandling($record->getNamespace());
+                return $this->filter->isHandling($record->getTrace()->getNamespace());
             } else {
                 return true;
             }

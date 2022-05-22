@@ -16,13 +16,13 @@ class LoggerTest extends TestCase {
      * test includes, calling error, and loglevel is warning
      */
     function testWithHandler() {
-        $channelHandler     = HandlerMock::getChannelHandler(["LoggerName", "Level", "Message"]);
+        $channelHandler     = HandlerMock::getChannelHandler(["{LoggerName} {Level} {Message}"]);
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::ERROR));
         $logger             = (new Logger($loggerName = "loggerName", null, $channelHandler));
         $logger->error($eMessage = "eMessage");
         $this->assertEquals(
-            "$loggerName|".Logger::ERROR."|$eMessage",
+            "$loggerName ".Logger::ERROR." $eMessage",
             HandlerMock::getContent()
         );
     }
@@ -37,14 +37,14 @@ class LoggerTest extends TestCase {
         $channelHandler     = HandlerMock::getChannelHandler();
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::WARNING,
-            ["LoggerName", "Message"]));
+            ["{LoggerName} {Message}"]));
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::ERROR,
-            ["LoggerName", "LevelName", "Message"]));
+            ["{LoggerName} {LevelName} {Message}"]));
         $logger             = (new Logger($loggerName = "loggerName", null, $channelHandler));
         $logger->error($eMessage = "eMessage");
         $this->assertEquals(
-            "$loggerName|".Logger::$levels[Logger::ERROR]."|$eMessage",
+            "$loggerName ".Logger::$levels[Logger::ERROR]." $eMessage",
             HandlerMock::getContent()
         );
     }
@@ -59,14 +59,14 @@ class LoggerTest extends TestCase {
         $channelHandler     = HandlerMock::getChannelHandler();
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::ERROR,
-            ["LoggerName", "LevelName", "Message"]));
+            ["{LoggerName} {LevelName} {Message}"]));
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::WARNING,
-            ["LoggerName", "Message"]));
+            ["{LoggerName} {Message}"]));
         $logger             = (new Logger($loggerName = "loggerName", null, $channelHandler));
         $logger->error($eMessage = "eMessage");
         $this->assertEquals(
-            "$loggerName|".Logger::$levels[Logger::ERROR]."|$eMessage",
+            "$loggerName ".Logger::$levels[Logger::ERROR]." $eMessage",
             HandlerMock::getContent()
         );
     }

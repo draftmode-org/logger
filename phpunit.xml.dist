@@ -17,7 +17,7 @@
       <directory>./tests</directory>
     </exclude>
     <report>
-      <html outputDirectory="./tests/.report"/>
+      <html outputDirectory="./.report"/>
     </report>
   </coverage>
   <php>

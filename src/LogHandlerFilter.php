@@ -44,6 +44,7 @@ class LogHandlerFilter implements LogHandlerFilterInterface {
 
     /**
      * @param string $text
+     * @param int $repeat
      * @return string
      */
     private function escapeSlashes(string $text, int $repeat) : string {
@@ -61,6 +62,6 @@ class LogHandlerFilter implements LogHandlerFilterInterface {
     private function preg_match(string $namespace, array $filter) : bool {
         $pattern                                    = "#(".join(")|(", $filter).")#";
         $pattern                                    = $this->escapeSlashes($pattern, 2);
-        return preg_match($pattern, $namespace);
+        return (preg_match($pattern, $namespace) === 1);
     }
 }

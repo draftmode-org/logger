@@ -2,20 +2,24 @@
 This component is an implementation of PSR/Log standard with some extensions.
 
 ## _Structure_
-1. the [Logger](#object-logger)<br>
+1. the [Logger](#object-logger) component<br>
 has to be initialized with 0-n [ChannelHandler](#object-channel-handler)<br>
 and provides the common known methods:
    - warning
    - error
    - notice
    - ...
-2. the [ChannelHandler](#object-channel-handler)<br>
+2. the [ChannelHandler](#object-channel-handler) component<br>
 is responsible for the target/writer and the recordFormatter configuration<br>
 every [ChannelHandler](#object-channel-handler) can have 0-n [LogHandler](#object-log-handler)
-3. the [LogHandler](#object-log-handler)<br>
+3. the [LogHandler](#object-log-handler) component<br>
 determines
    - the logLevel
    - the format (optional, default: from ChannelHandler)
+
+_The Terrazza/Logger component differ to the common PSR/Log implementation in handling the "Format".
+The Writer Component handles multiple "rows" and combines it. Within this difference its possible to forward a transformed format and keep his keys per row.<br>
+For example: write the message/format into a json object or db._
 
 ## _Object/Classes_
 
@@ -32,6 +36,7 @@ determines
    1. [ChannelHandler](#object-channel-handler)
    2. [LogHandler](#object-log-handler)
 3. [LogRecord](#object-record)
+   1. [LogRecordTrace](#object-record-trace)
 4. [LogRecordFormatter](#object-log-record-formatter)
 5. [LogHandlerFilter](#object-log-handler-filter)
 6. [Converter](#object-converter)
@@ -94,22 +99,14 @@ default: php://stderr
 <a id="user-content-object-logger-constructor-context" name="user-content-object-logger-constructor-context"></a>
 #### constructor: context (array)
 the logger can be initialized, next to the name, with an initialized context.<br>
-This context will be merged with the e.g. error(message, ["key" => "value"]).<br>
+This context can be addressed separately.<br>
 
 <i>example of usage</i><br>
 a class is injected with the component and inside the constructor<br>
 ```
-$logger = new Logger("name", ["user" => "user"]);
+$logger = new Logger("name", ["user" => "Value"]);
 $logger->notice("hello", ["my" => "value"]);
-
-/* Record.Context will now include both: 
-- the pushed context for the message
-- the initialzed context
-[
-"user" => "user", 
-"my" => "value"
-]
-*/
+$format = ["{Context.my} {iContext.user}"];
 ```
 ### Handler
 <a id="object-channel-handler" name="object-channel-handler"></a>
@@ -120,7 +117,9 @@ A ChannelHandler collect [LogHandler](#object-log-handler) to the same channel a
 - the same formatter<br>
 for each [LogHandler](#object-log-handler).
 
-A ChannelHandler can be registered through the [Logger](#object-logger) with [method: registerChannelHandler](#object-logger-registerChannelHandler).
+A ChannelHandler can be registered through the [Logger](#object-logger) with<br>
+- [method: registerChannelHandler](#object-logger-registerChannelHandler)
+- the __constructor (3rd argument as variadic)
 
 ##### method: getChannel (ChannelInterface)
 ##### method: getLogHandler (array)
@@ -151,16 +150,16 @@ Against the common PSR implementation our component deals with an object and not
 LogRecord properties:
 - logDate (\Datetime)
 - loggerName (string)
-- logLevel (int)
+- logLevel (int) 
 - logMessage (string)
-- context (array)
 - memUsed (int)
 - memAllocated (int)
+- [LogRecordTrace](#object-record-trace)
+- context (array)
+- initContext (array)
 
-additional, and optional properties:
-- traceNamespace
-- traceMethod
-- traceLine
+additional, the object provides
+- logLevelName (string)
 
 #### method/static createRecord
 this method is used inside <i>Logger</i> to create a new LogRecord object.
@@ -175,16 +174,32 @@ return [
   'Level'        => $this->getLogLevel(),
   'LevelName'    => $this->getLogLevelName(),
   'LoggerName'   => $this->getLoggerName(),
-  'Namespace'    => $this->getNamespace(),
-  'sNamespace'   => $this->getNamespace() ? basename($this->getNamespace()) : null,
-  'Method'       => $this->getMethod(),
-  'sMethod'      => $this->getMethod() ? basename($this->getMethod()) : null,
   'MemUsed'      => $this->getMemUsed(),
   'MemAllocated' => $this->getMemAllocated(),
   'Message'      => $this->getLogMessage(),
   'Context'      => $this->getContext(),
+  'iContext'     => $this->getInitContext(),
+  'Trace'        => [
+    "Namespace"    => $this->getTrace()->getNamespace(),
+    "Line"         => $this->getTrace()->getLine(),
+    "Classname"    => $this->getTrace()->getClassname(),
+    "Function"     => $this->getTrace()->getFunction(),
+    "Method"       => $this->getTrace()->getClassname()."::".$this->getTrace()->getFunction(),
+    "sMethod"      => basename($this->getTrace()->getClassname())."::".$this->getTrace()->getFunction(),  
+  ]
 ]
 ```
+
+<a id="object-record-trace" name="object-record-trace"></a>
+<a id="user-content-object-record-trace" name="user-content-object-record-trace"></a>
+### LogRecordTrace
+The LogRecordTrace object is generated in the [Logger](#object-logger) during a [LogRecord](#object-record) is created.<br>
+Base on _debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)_ every Record get additional properties:
+- Namespace
+- Classname
+- Function
+- Line
+
 <a id="object-log-record-formatter" name="object-log-record-formatter"></a>
 <a id="user-content-object-log-record-formatter" name="user-content-object-log-record-formatter"></a>
 ### LogRecordFormatter
@@ -193,7 +208,7 @@ Initialized properties:
 - NonScalarConverterInterface
 - format (array)
 <br>
-``["Date", "Message"]``
+``["{Date} {Message}"]``
 
 #### NonScalarConverter (NonScalarConverterInterface)
 The NonScalarConverter convert a nonScalar value (e.g. from Context) into a string.<br>
@@ -340,12 +355,11 @@ echo $formatter->convert(["message" => "myMessage", "context" => ["k" => "v"]);
 #### StreamFile
 Save converted record to a file.<br>
 arguments:
-- converter (IFormattedRecordConverter, required
+- converter (IFormattedRecordConverter, required)
 - filename (string required)
 - flags (int, optional, default: 0)
 
->notice:<br>
-The Converter should convert the formatted LogRecord into a string. 
+>the converter should convert the formatted LogRecord into a string. 
  
 ```
 use Terrazza\Component\Logger\Writer\StreamFile;

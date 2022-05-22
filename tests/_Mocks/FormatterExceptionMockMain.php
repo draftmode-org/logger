@@ -1,6 +1,5 @@
 <?php
 namespace Terrazza\Component\Logger\Tests\_Mocks;
-use RuntimeException;
 
 class FormatterExceptionMockMain {
     public int $exceptionLine=__LINE__+2;

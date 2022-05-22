@@ -9,30 +9,32 @@ class LogRecord {
     private string $loggerName;
     private int $logLevel;
     private string $logMessage;
+    private LogRecordTrace $trace;
     private array $context;
-    private int $memUsed;
-    private int $memAllocated;
-
-    private ?string $traceNamespace=null;
-    private ?string $traceMethod=null;
-    private ?int $traceLine=null;
+    private array $initContext;
+    private float $memUsed;
+    private float $memAllocated;
 
     /**
      * @param DateTime $logDate
      * @param string $loggerName
      * @param int $logLevel
      * @param string $logMessage
-     * @param int $memUsed
-     * @param int $memAllocated
+     * @param float $memUsed
+     * @param float $memAllocated
+     * @param LogRecordTrace $trace
      * @param array|null $context
+     * @param array|null $initContext
      */
     public function __construct(DateTime $logDate,
-                                   string $loggerName,
-                                   int $logLevel,
-                                   string $logMessage,
-                                   int $memUsed,
-                                   int $memAllocated,
-                                   array $context=null)
+                                string $loggerName,
+                                int $logLevel,
+                                string $logMessage,
+                                float $memUsed,
+                                float $memAllocated,
+                                LogRecordTrace $trace,
+                                array $context=null,
+                                array $initContext=null)
     {
         $this->logDate                              = $logDate;
         $this->loggerName                           = $loggerName;
@@ -40,21 +42,26 @@ class LogRecord {
         $this->logMessage                           = $logMessage;
         $this->memUsed                           	= $memUsed;
         $this->memAllocated                         = $memAllocated;
+        $this->trace                                = $trace;
         $this->context                              = $context ?? [];
-        $this->setCallerNamespace();
+        $this->initContext                          = $initContext ?? [];
     }
 
     /**
      * @param string $loggerName
      * @param int $logLevel
      * @param string $logMessage
+     * @param LogRecordTrace $trace
      * @param array|null $context
+     * @param array|null $initContext
      * @return LogRecord
      */
     public static function createRecord(string $loggerName,
                                         int $logLevel,
                                         string $logMessage,
-                                        array $context=null): LogRecord {
+                                        LogRecordTrace $trace,
+                                        array $context=null,
+                                        array $initContext=null): LogRecord {
         return new self(
             new DateTime(),
             $loggerName,
@@ -62,7 +69,9 @@ class LogRecord {
             $logMessage,
             round(memory_get_usage(false) / 1024),
             round(memory_get_usage(true) / 1024),
-            $context
+            $trace,
+            $context,
+            $initContext
         );
     }
 
@@ -108,17 +117,24 @@ class LogRecord {
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getMemUsed() : int {
+    public function getMemUsed() : float {
         return $this->memUsed;
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getMemAllocated() : int {
+    public function getMemAllocated() : float {
         return $this->memAllocated;
+    }
+
+    /**
+     * @return LogRecordTrace
+     */
+    public function getTrace() : LogRecordTrace {
+        return $this->trace;
     }
 
     /**
@@ -129,25 +145,10 @@ class LogRecord {
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getNamespace() : string {
-        return $this->traceNamespace;
-    }
-
-    /**
-     * @return void
-     */
-    private function setCallerNamespace() : void {
-        $traces                                     = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        array_shift($traces);
-        $traceLine                                  = array_shift($traces);
-        $traceClass			                        = array_shift($traces);
-        $className                                  = $traceClass["class"];
-        $this->traceMethod                          = $traceClass["function"];
-        $this->traceLine                            = $traceLine["line"];
-        $namespace                                  = join("\\", array_slice(explode("\\", $className), 0, -1));
-        $this->traceNamespace                       = $namespace;
+    public function getInitContext() : array {
+        return $this->initContext;
     }
 
     /**
@@ -159,14 +160,19 @@ class LogRecord {
             'Level' 			                    => $this->getLogLevel(),
             'LevelName'     	                    => $this->getLogLevelName(),
             'LoggerName' 		                    => $this->getLoggerName(),
-            'Namespace'			                    => $this->traceNamespace,
-            'sNamespace'		                    => $this->traceNamespace ? basename($this->traceNamespace) : null,
-            'Method'			                    => $this->traceMethod,
-            'Line'			                        => $this->traceLine,
             'MemUsed'			                    => $this->getMemUsed(),
             'MemAllocated'		                    => $this->getMemAllocated(),
             'Message' 			                    => $this->getLogMessage(),
             'Context'			                    => $this->getContext(),
+            'iContext'			                    => $this->getInitContext(),
+            'Trace'			                        => [
+                "Namespace"                         => $this->getTrace()->getNamespace(),
+                "Line"                              => $this->getTrace()->getLine(),
+                "Classname"                         => $this->getTrace()->getClassname(),
+                "Function"                          => $this->getTrace()->getFunction(),
+                "Method"                            => $this->getTrace()->getClassname()."::".$this->getTrace()->getFunction(),
+                "sMethod"                           => basename($this->getTrace()->getClassname())."::".$this->getTrace()->getFunction(),
+            ]
         ];
     }
 }

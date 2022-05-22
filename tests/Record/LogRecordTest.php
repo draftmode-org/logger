@@ -4,6 +4,7 @@ use DateTime;
 use PHPUnit\Framework\TestCase;
 use Terrazza\Component\Logger\Logger;
 use Terrazza\Component\Logger\Record\LogRecord;
+use Terrazza\Component\Logger\Record\LogRecordTrace;
 
 class LogRecordTest extends TestCase {
 
@@ -15,10 +16,10 @@ class LogRecordTest extends TestCase {
             $logMessage = "myMessage",
                 $memUsed = 1,
             $memAllocated = 2,
-            $context = ["key" => "value"]
+            $trace = new LogRecordTrace(__NAMESPACE__, "-", "-"),
+            $context = ["key" => "value"],
+            $initContext = ["key" => "value"],
         );
-        $line = __LINE__ - 2;
-        $namespace = __NAMESPACE__;
         $dateFormat = "Y-m-d";
         $this->assertEquals([
             $logDate->format($dateFormat),
@@ -28,20 +29,27 @@ class LogRecordTest extends TestCase {
             $logMessage,
             $memUsed,
             $memAllocated,
+            $trace,
             $context,
+            $initContext,
             [
                 'Date' 				=> $logDate,
                 'Level' 			=> $logLevel,
                 'LevelName' 		=> $logLevelName,
                 'LoggerName' 		=> $loggerName,
-                'Namespace'			=> $namespace,
-                'sNamespace'		=> basename($namespace),
                 'MemUsed'			=> $memUsed,
                 'MemAllocated'		=> $memAllocated,
                 'Message' 			=> $logMessage,
                 'Context'			=> $context,
-                'Method'            => 'testClassCreate',
-                'Line'              => $line
+                'iContext'			=> $initContext,
+                'Trace'			    => [
+                    'Namespace'     => __NAMESPACE__,
+                    'Line'          => null,
+                    'Classname'     => "-",
+                    'Function'      => "-",
+                    'Method'        => "-::-",
+                    'sMethod'       => "-::-"
+                ],
             ]
         ],[
             $record->getLogDate()->format($dateFormat),
@@ -51,7 +59,9 @@ class LogRecordTest extends TestCase {
             $record->getLogMessage(),
             $record->getMemUsed(),
             $record->getMemAllocated(),
+            $record->getTrace(),
             $record->getContext(),
+            $record->getInitContext(),
             $record->getToken(),
         ]);
     }

@@ -23,22 +23,28 @@ class HandlerMock {
     }
     public static function getContent(string $stream=null) :?string {
         if (file_exists($stream ?? self::stream)) {
-            return trim(file_get_contents($stream ?? self::stream));
+            $content = trim(file_get_contents($stream ?? self::stream));
+            @unlink($stream ?? self::stream);
         } else {
-            return null;
+            $content = null;
         }
+        return $content;
     }
 
-    public static function getChannel(?array $format=null, string $stream=null) : ChannelInterface {
+    public static function getChannel(?array $format=null, string $stream=null, ?array $converter=null) : ChannelInterface {
+        $formatter = new LogRecordFormatter(new NonScalarJsonConverter(), $format ?? ["{LoggerName} {Level} {Message}"]);
+        foreach ($converter ?? [] as $tKey => $tCallback) {
+            $formatter->pushConverter($tKey, $tCallback);
+        }
         return new Channel(
             "channel",
             new LogStreamFileWriter(new FormattedRecordConverterMock(), $stream ?? self::stream),
-            new LogRecordFormatter(new NonScalarJsonConverter(), $format ?? ["LoggerName", "Level", "Message"])
+            $formatter
         );
     }
 
-    public static function getChannelHandler(?array $format=null) : ChannelHandlerInterface {
-        return new ChannelHandler(self::getChannel($format));
+    public static function getChannelHandler(?array $format=null, ?array $converter=null) : ChannelHandlerInterface {
+        return new ChannelHandler(self::getChannel($format, null, $converter));
     }
 
     public static function getLogHandler(int $logLevel, ?array $format=null, ?LogHandlerFilterInterface $filter=null) : LogHandlerInterface {

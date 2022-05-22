@@ -8,7 +8,8 @@ use Terrazza\Component\Logger\Tests\_Mocks\LogRecordFormatterMock;
 use Terrazza\Component\Logger\Tests\_Mocks\LogWriterMock;
 
 class ChannelTest extends TestCase {
-    function test() {
+
+    function testClass() {
         $writer     = new LogWriterMock();
         $formatter  = new LogRecordFormatterMock();
         $channel    = new Channel($channelName="name", $writer, $formatter);

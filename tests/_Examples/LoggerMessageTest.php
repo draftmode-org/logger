@@ -20,11 +20,11 @@ class LoggerMessageTest extends TestCase {
         $channelHandler     = HandlerMock::getChannelHandler();
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::WARNING,
-            ["LoggerName", "Level", "Message"]));
+            ["{LoggerName} {Level} {Message}"]));
         $logger             = (new Logger($loggerName = "loggerName",null, $channelHandler));
         $logger->error($message = "message");
         $this->assertEquals(
-            "$loggerName|".Logger::ERROR."|$message",
+            "$loggerName ".Logger::ERROR." $message",
             HandlerMock::getContent()
         );
     }
@@ -33,11 +33,11 @@ class LoggerMessageTest extends TestCase {
         $channelHandler     = HandlerMock::getChannelHandler();
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::WARNING,
-            ["LoggerName", "Level", "Message", "Context.iContent", "Context.wContent"]));
-        $logger             = (new Logger($loggerName = "loggerName",["iContent" => $iContent = "content"], $channelHandler));
-        $logger->warning($message = "message", ["wContent" => $wContent = "content"]);
+            ["{LoggerName} {Level} {Message} {iContext.wContent} {Context.wContent}"]));
+        $logger             = (new Logger($loggerName = "loggerName",["wContent" => "iWcontent"], $channelHandler));
+        $logger->warning($message = "message", ["wContent" => "cWcontent"]);
         $this->assertEquals(
-            "$loggerName|".Logger::WARNING."|$message|$iContent|$wContent",
+            "$loggerName ".Logger::WARNING." $message iWcontent cWcontent",
             HandlerMock::getContent()
         );
     }
@@ -46,9 +46,9 @@ class LoggerMessageTest extends TestCase {
         $channelHandler     = HandlerMock::getChannelHandler();
         $channelHandler->pushLogHandler(HandlerMock::getLogHandler(
             Logger::WARNING,
-            ["LoggerName", "Level", "Message", "Context.iContent", "Context.wContent"],
+            ["{LoggerName} {Level} {Message} {Context.iContent} {Context.wContent}"],
             new LogHandlerFilter(["unknownNamespace"])));
-        $logger             = (new Logger($loggerName = "loggerName",["iContent" => $iContent = "content"], $channelHandler));
+        $logger             = (new Logger("loggerName",["iContent" => "content"], $channelHandler));
         $logger->warning("message");
         $this->assertNull(HandlerMock::getContent());
     }

@@ -3,6 +3,7 @@ namespace Terrazza\Component\Logger;
 
 use RuntimeException;
 use Terrazza\Component\Logger\Record\LogRecord;
+use Terrazza\Component\Logger\Record\LogRecordTrace;
 use Throwable;
 
 class Logger implements LoggerInterface {
@@ -45,7 +46,7 @@ class Logger implements LoggerInterface {
      * @param array|null $context
      * @param ChannelHandlerInterface ...$channelHandler
      */
-    public function __construct(string $loggerName, ?array $context=null, ChannelHandlerInterface ...$channelHandler) {
+    public function __construct(string $loggerName, array $context=null, ChannelHandlerInterface ...$channelHandler) {
         $this->loggerName                           = $loggerName;
         $this->context                              = $context ?? [];
         foreach ($channelHandler as $handler) {
@@ -100,15 +101,15 @@ class Logger implements LoggerInterface {
     /**
      * @param int $errorTypes
      */
-    public function registerErrorHandler(int $errorTypes = -1) : void {
-        set_error_handler([$this, "handleError"]);//, $errorTypes);
+    public function registerErrorHandler(int $errorTypes = E_ALL) : void {
+        set_error_handler([$this, "handleError"], $errorTypes);
     }
 
     /**
      * @param int $display_errors
      */
     public function registerFatalHandler(int $display_errors=0) : void {
-        ini_set('display_errors',$display_errors);
+        ini_set('display_errors',"$display_errors");
         register_shutdown_function([$this, "handleFatalError"]);
     }
 
@@ -166,23 +167,43 @@ class Logger implements LoggerInterface {
     }
 
     /**
+     * @param int $shifts
+     * @return LogRecordTrace
+     */
+    private function getTrace(int $shifts=2) : LogRecordTrace {
+        $traces                                     = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        for($shift=0;$shift < $shifts;$shift++) {
+            array_shift($traces);
+        }
+        $trace                                      = array_shift($traces);
+        $line                                       = $trace["line"] ?? null;
+        //
+        $trace                                      = array_shift($traces);
+        $class                                      = $trace["class"] ?? "-";
+        $function                                   = $trace["function"] ?? "-";
+        $namespace                                  = join("\\", array_slice(explode("\\", $class), 0, -1));
+        return new LogRecordTrace(
+            $namespace,
+            $class,
+            $function,
+            $line
+        );
+    }
+
+    /**
      * @param int $logLevel
-     * @param $message
+     * @param string $message
      * @param array $context
      */
-    private function addMessage(int $logLevel, $message, array $context=[]) : void {
-        //
-        // context will be extended / overloaded by global context
-        //
-        if (count($this->context)) {
-            $context                                = $context + $this->context;
-        }
+    private function addMessage(int $logLevel, string $message, array $context=[]) : void {
         //
         $record = LogRecord::createRecord(
             $this->loggerName,
             $logLevel,
             $message,
-            $context ?? []
+            $this->getTrace(),
+            $context,
+            $this->context,
         );
 
         try {
