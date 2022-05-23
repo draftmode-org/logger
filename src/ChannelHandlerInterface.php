@@ -5,9 +5,24 @@ use Terrazza\Component\Logger\Record\LogRecord;
 
 interface ChannelHandlerInterface {
     /**
-     * @return ChannelInterface
+     * @return LogWriterInterface
      */
-    public function getChannel() : ChannelInterface;
+    public function getWriter(): LogWriterInterface;
+
+    /**
+     * @return LogRecordFormatterInterface
+     */
+    public function getFormatter(): LogRecordFormatterInterface;
+
+    /**
+     * @return LogHandlerFilterInterface|null
+     */
+    public function getFilter(): ?LogHandlerFilterInterface;
+
+    /**
+     * @return LogHandlerInterface[]
+     */
+    public function getLogHandler() : array;
 
     /**
      * @param LogHandlerInterface $logHandler

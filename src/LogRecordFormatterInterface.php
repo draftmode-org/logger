@@ -6,12 +6,6 @@ use Terrazza\Component\Logger\Record\LogRecord;
 
 interface LogRecordFormatterInterface {
     /**
-     * @param array $format
-     * @return LogRecordFormatterInterface
-     */
-    public function withFormat(array $format): LogRecordFormatterInterface;
-
-    /**
      * @param string $tokenKey
      * @param LogRecordValueConverterInterface $valueConverter
      */
@@ -19,7 +13,8 @@ interface LogRecordFormatterInterface {
 
     /**
      * @param LogRecord $record
+     * @param array|null $format
      * @return array
      */
-    public function formatRecord(LogRecord $record) : array;
+    public function formatRecord(LogRecord $record, array $format=null) : array;
 }

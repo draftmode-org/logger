@@ -27,10 +27,10 @@ class RecordFormatterTest extends TestCase {
     function testMethodWithFormat() {
         $nonScalar  = new NonScalarJsonConverter();
         $record     = $this->getRecord();
-        $formatter  = (new LogRecordFormatter($nonScalar, []))->withFormat([
+        $formatter  = (new LogRecordFormatter($nonScalar, [
             "LoggerName" => "{LoggerName}",
             "Level" => "{Level}"
-        ]);
+        ]));
         $this->assertEquals(
             ["LoggerName" => $record->getLoggerName(), "Level" => $record->getLogLevel()],
             $formatter->formatRecord($record)

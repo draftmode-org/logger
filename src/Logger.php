@@ -1,7 +1,6 @@
 <?php
 namespace Terrazza\Component\Logger;
 
-use RuntimeException;
 use Terrazza\Component\Logger\Record\LogRecord;
 use Terrazza\Component\Logger\Record\LogRecordTrace;
 use Throwable;
@@ -34,7 +33,7 @@ class Logger implements LoggerInterface {
     /**
      * @var ChannelHandlerInterface[]
      */
-    private array $channel                          = [];
+    private array $channelHandler                   = [];
 
     /**
      * @var string
@@ -49,9 +48,7 @@ class Logger implements LoggerInterface {
     public function __construct(string $loggerName, array $context=null, ChannelHandlerInterface ...$channelHandler) {
         $this->loggerName                           = $loggerName;
         $this->context                              = $context ?? [];
-        foreach ($channelHandler as $handler) {
-            $this->registerChannelHandler($handler);
-        }
+        $this->channelHandler                       = $channelHandler;
     }
 
     /**
@@ -59,36 +56,8 @@ class Logger implements LoggerInterface {
      * @return LoggerInterface
      */
     public function registerChannelHandler(ChannelHandlerInterface $channelHandler) : LoggerInterface {
-        $channelName                                = $channelHandler->getChannel()->getName();
-        $this->channel[$channelName]                = $channelHandler;
+        $this->channelHandler[]                     = $channelHandler;
         return $this;
-    }
-
-    /**
-     * @param string $channelName
-     * @return ChannelHandlerInterface|null
-     */
-    public function getChannelHandler(string $channelName) :?ChannelHandlerInterface {
-        if (array_key_exists($channelName, $this->channel)) {
-            return $this->channel[$channelName];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @param string $channelName
-     * @param LogHandlerInterface $logHandler
-     * @return LoggerInterface
-     */
-    public function pushLogHandler(string $channelName, LogHandlerInterface $logHandler) : LoggerInterface {
-        if (array_key_exists($channelName, $this->channel)) {
-            $channelHandler                         = $this->channel[$channelName];
-            $channelHandler->pushLogHandler($logHandler);
-            return $this;
-        } else {
-            throw new RuntimeException("logHandler cannot be pushed, channel ".$channelName." is not registered");
-        }
     }
 
     /**
@@ -207,7 +176,7 @@ class Logger implements LoggerInterface {
         );
 
         try {
-            foreach ($this->channel as $channelHandler) {
+            foreach ($this->channelHandler as $channelHandler) {
                 if ($logHandler = $channelHandler->getEffectedHandler($record)) {
                     $channelHandler->writeRecord($logHandler, $record);
                 }

@@ -13,19 +13,12 @@ class LogRecordFormatter implements LogRecordFormatterInterface {
     private CONST typeSafe = "t-y-p-e-s-a-v-e";
     private CONST defaultChar = "?";
 
-    public function __construct(NonScalarConverterInterface $nonScalarConverter, array $format) {
+    public function __construct(NonScalarConverterInterface $nonScalarConverter, array $format, array $valueConverter=null) {
         $this->nonScalarConverter 					= $nonScalarConverter;
         $this->format 								= $format;
-    }
-
-    /**
-     * @param array $format
-     * @return LogRecordFormatterInterface
-     */
-    public function withFormat(array $format) : LogRecordFormatterInterface {
-        $formatter                                  = clone $this;
-        $formatter->format                          = $format;
-        return $formatter;
+        foreach ($valueConverter ?? [] as $tokenKey => $tokenConverter) {
+            $this->pushConverter($tokenKey, $tokenConverter);
+        }
     }
 
     /**
@@ -38,11 +31,13 @@ class LogRecordFormatter implements LogRecordFormatterInterface {
 
     /**
      * @param LogRecord $record
+     * @param array|null $format
      * @return array
      */
-    public function formatRecord(LogRecord $record) : array {
+    public function formatRecord(LogRecord $record, array $format=null) : array {
         $token										= $record->getToken();
-        return $this->formatTokens($token);
+        $format                                     = $format ?? $this->format;
+        return $this->formatTokens($format, $token);
     }
 
     /**
@@ -59,10 +54,11 @@ class LogRecordFormatter implements LogRecordFormatterInterface {
     }
 
     /**
+     * @param array $format
      * @param array $tokens
      * @return array
      */
-    private function formatTokens(array $tokens) : array {
+    private function formatTokens(array $format, array $tokens) : array {
         $rows 										= [];
         $nonScalars									= [];
 
@@ -80,7 +76,7 @@ class LogRecordFormatter implements LogRecordFormatterInterface {
 
         //
         $specialTokensKey                           = "(".join("|", $specialTokenKeys).")";
-        foreach ($this->format as $fKey => $sText) {
+        foreach ($format as $fKey => $sText) {
             $nonScalar								= null;
             $rows[$fKey]    					    = preg_replace_callback("/{(.*?)}/", function ($match) use ($tokens, &$specialTokens, $specialTokensKey, &$nonScalar, $sText) {
                 $fText 								= $match[0];

@@ -31,17 +31,4 @@ interface LoggerInterface extends PsrLoggerInterface {
      * @return LoggerInterface
      */
     public function registerChannelHandler(ChannelHandlerInterface $channelHandler) : LoggerInterface;
-
-    /**
-     * @param string $channelName
-     * @return ChannelHandlerInterface|null
-     */
-    public function getChannelHandler(string $channelName) :?ChannelHandlerInterface;
-
-    /**
-     * @param string $channelName
-     * @param LogHandlerInterface $logHandler
-     * @return LoggerInterface
-     */
-    public function pushLogHandler(string $channelName, LogHandlerInterface $logHandler) : LoggerInterface;
 }

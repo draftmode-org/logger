@@ -26,7 +26,6 @@
   <testsuites>
     <testsuite name="all">
       <directory>./tests/Common</directory>
-      <directory>./tests/Channel</directory>
       <directory>./tests/Converter</directory>
       <directory>./tests/Formatter</directory>
       <directory>./tests/Handler</directory>
@@ -37,9 +36,6 @@
     </testsuite>
     <testsuite name="Common">
       <directory>./tests/Common</directory>
-    </testsuite>
-    <testsuite name="Channel">
-      <directory>./tests/Channel</directory>
     </testsuite>
     <testsuite name="Converter">
       <directory>./tests/Converter</directory>

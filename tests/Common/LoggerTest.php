@@ -2,7 +2,6 @@
 namespace Terrazza\Component\Logger\Tests\Common;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Terrazza\Component\Logger\Channel\Channel;
 use Terrazza\Component\Logger\Converter\NonScalar\NonScalarJsonConverter;
 use Terrazza\Component\Logger\Formatter\LogRecordFormatter;
 use Terrazza\Component\Logger\Handler\ChannelHandler;
@@ -17,6 +16,7 @@ use Terrazza\Component\Logger\Tests\_Mocks\HandlerMock;
 use Terrazza\Component\Logger\Writer\LogStreamFileWriter;
 
 class LoggerTest extends TestCase {
+
     private function getEmptyHandler(int $logLevel) : LogHandlerInterface {
         return new LogHandler(
             $logLevel
@@ -43,34 +43,15 @@ class LoggerTest extends TestCase {
         $this->assertTrue(true);
     }
 
-    function testChannelHandler() {
+    function testRegisterChannelHandlerSuccessful() {
         $logHandler     = HandlerMock::getLogHandler(Logger::ERROR);
         $channelHandler = HandlerMock::getChannelHandler($logHandler->getFormat());
-        $channelName    = $channelHandler->getChannel()->getName();
-        $logger         = new Logger("loggerName", null, $channelHandler);
-        $this->assertEquals([
-            null,
-            $channelHandler,
-        ],[
-            $logger->getChannelHandler("unknown"),
-            $logger->getChannelHandler($channelHandler->getChannel()->getName())
-        ]);
-    }
-
-    function testPushLogHandlerSuccessful() {
-        $logHandler     = HandlerMock::getLogHandler(Logger::ERROR);
-        $channelHandler = HandlerMock::getChannelHandler($logHandler->getFormat());
-        $channelName    = $channelHandler->getChannel()->getName();
-        $logger         = new Logger("loggerName", null, $channelHandler);
-        $logger->pushLogHandler($channelName, HandlerMock::getLogHandler(Logger::ERROR));
+        $channelHandler->pushLogHandler($logHandler);
+        $logger         = new Logger("loggerName", null);
+        $logger->registerChannelHandler($channelHandler);
         $this->assertTrue(true);
     }
 
-    function testPushLogHandlerChannelMissingException() {
-        $logger = new Logger("loggerName");
-        $this->expectException(RuntimeException::class);
-        $logger->pushLogHandler("channel", HandlerMock::getLogHandler(Logger::ERROR));
-    }
 
     function testGetters() {
         $logger     = new Logger("loggerName", [$mKey = "mKey" => $mValue = "mValue"]);
@@ -78,27 +59,11 @@ class LoggerTest extends TestCase {
         $logger->registerErrorHandler();
         $logger->registerExceptionHandler();
         $this->assertTrue(true);
-/*        $this->assertEquals([
-            true,
-            $mValue,
-            false,
-            null,
-        ],[
-            $logger->hasContextKey($mKey),
-            $logger->getContextByKey($mKey),
-            $logger->hasContextKey("unknown"),
-            $logger->getContextByKey("unknown"),
-        ]);*/
     }
 
     public function testNamespace() {
         $formatter          = new LogRecordFormatter(new NonScalarJsonConverter(), ["Message" => "{LoggerName} {Level} {Message} {Trace.Namespace}"]);
-        $channel            = new Channel(
-            "channel",
-            new LogStreamFileWriter(new FormattedRecordConverterMock(), HandlerMock::stream),
-            $formatter
-        );
-        $channelHandler     = new ChannelHandler($channel);
+        $channelHandler     = new ChannelHandler(new LogStreamFileWriter(new FormattedRecordConverterMock(), HandlerMock::stream), $formatter, null);
         $logHandler         = new LogHandler(Logger::DEBUG);
         $channelHandler->pushLogHandler($logHandler);
         $logger             = new Logger($loggerName = "NamespaceTest", null, $channelHandler);
@@ -145,25 +110,25 @@ class LoggerTest extends TestCase {
 
     /** exceptionFileName */
     function testExceptionFile() {
-        $logger             = $this->getHandlerErrorLogger("lName", Logger::ERROR);
+        $logHandler         = new class (Logger::WARNING) implements LogHandlerInterface {
+            private int $logLevel;
+            public function __construct(int $logLevel) {
+                $this->logLevel = $logLevel;
+            }
+            public function getLogLevel(): int { return $this->logLevel;}
+            public function getFormat(): ?array { return null;}
+            public function getFilter(): ?LogHandlerFilterInterface {return null;}
+            public function isHandling(LogRecord $record): bool {
+                $failure = 12 / 0;
+                return (bool)$failure;
+            }
+        };
+        $channelHandler     = HandlerMock::getChannelHandler();
+        $channelHandler->pushLogHandler($logHandler);
+
+        $logger             = (new Logger("logger", null, $channelHandler));
         $logger->setExceptionFileName(HandlerMock::stream.".err");
-        if ($channel = $logger->getChannelHandler("channel")) {
-            $channel->pushLogHandler(
-                new class (Logger::WARNING) implements LogHandlerInterface {
-                    private int $logLevel;
-                    public function __construct(int $logLevel) {
-                        $this->logLevel = $logLevel;
-                    }
-                    public function getLogLevel(): int { return $this->logLevel;}
-                    public function getFormat(): ?array { return null;}
-                    public function getFilter(): ?LogHandlerFilterInterface {return null;}
-                    public function isHandling(LogRecord $record): bool {
-                        $failure = 12 / 0;
-                        return (bool)$failure;
-                    }
-                }
-            );
-        }
+
         @unlink(HandlerMock::stream.".err");
         $logger->warning("wMessage");
         $this->assertNotNull(HandlerMock::getContent(HandlerMock::stream.".err"));

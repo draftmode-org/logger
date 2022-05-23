@@ -3,27 +3,46 @@
 namespace Terrazza\Component\Logger\Handler;
 
 use Terrazza\Component\Logger\ChannelHandlerInterface;
-use Terrazza\Component\Logger\ChannelInterface;
+use Terrazza\Component\Logger\LogHandlerFilterInterface;
 use Terrazza\Component\Logger\LogRecordFormatterInterface;
+use Terrazza\Component\Logger\LogWriterInterface;
 use Terrazza\Component\Logger\Record\LogRecord;
 use Terrazza\Component\Logger\LogHandlerInterface;
 
 class ChannelHandler implements ChannelHandlerInterface {
-    private ChannelInterface $channel;
+    private LogWriterInterface $writer;
+    private LogRecordFormatterInterface $formatter;
+    private ?LogHandlerFilterInterface $filter;
     /** @var LogHandlerInterface[] */
     private array $logHandler=[];
-    public function __construct(ChannelInterface $channel, LogHandlerInterface ...$logHandler) {
-        $this->channel                              = $channel;
+    public function __construct(LogWriterInterface $writer, LogRecordFormatterInterface $formatter, ?LogHandlerFilterInterface $filter, LogHandlerInterface ...$logHandler) {
+        $this->writer                               = $writer;
+        $this->formatter                            = $formatter;
+        $this->filter                               = $filter;
         foreach ($logHandler as $singleLogHandler) {
             $this->pushLogHandler($singleLogHandler);
         }
     }
 
     /**
-     * @return ChannelInterface
+     * @return LogWriterInterface
      */
-    public function getChannel(): ChannelInterface {
-        return $this->channel;
+    public function getWriter(): LogWriterInterface {
+        return $this->writer;
+    }
+
+    /**
+     * @return LogRecordFormatterInterface
+     */
+    public function getFormatter(): LogRecordFormatterInterface {
+        return $this->formatter;
+    }
+
+    /**
+     * @return LogHandlerFilterInterface|null
+     */
+    public function getFilter(): ?LogHandlerFilterInterface {
+        return $this->filter;
     }
 
     /**
@@ -61,23 +80,11 @@ class ChannelHandler implements ChannelHandlerInterface {
 
     /**
      * @param LogHandlerInterface $handler
-     * @return LogRecordFormatterInterface
-     */
-    private function getHandlerFormatter(LogHandlerInterface $handler) : LogRecordFormatterInterface {
-        if ($format = $handler->getFormat()) {
-            return $this->channel->getFormatter()->withFormat($format);
-        } else {
-            return $this->channel->getFormatter();
-        }
-    }
-
-    /**
-     * @param LogHandlerInterface $handler
      * @param LogRecord $record
      */
     public function writeRecord(LogHandlerInterface $handler, LogRecord $record): void {
-        $this->channel->getWriter()->write(
-            $this->getHandlerFormatter($handler)->formatRecord($record)
+        $this->writer->write(
+            $this->formatter->formatRecord($record, $handler->getFormat())
         );
     }
 }
